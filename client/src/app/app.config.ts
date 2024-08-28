@@ -7,7 +7,12 @@ import { provideHttpClient } from '@angular/common/http';
 import { provideToastr } from 'ngx-toastr';
 
 export const appConfig: ApplicationConfig = {
-  providers: [provideRouter(routes), provideHttpClient(), provideAnimations(), provideToastr({
-    positionClass: 'toast-bottom-right'
-  })],
+  providers: [
+    provideRouter(routes),
+    provideHttpClient(),
+    provideAnimations(),
+    provideToastr({
+      positionClass: 'toast-bottom-right',
+    }),
+  ],
 };
