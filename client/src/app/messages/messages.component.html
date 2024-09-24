@@ -29,8 +29,8 @@
   </div>
 </div>
 
-@if (!messageService.paginatedResult()?.items) {
-<h3>No messages</h3>
+@if (!messageService.paginatedResult()?.items || messageService.paginatedResult()?.items?.length === 0) {
+<h3 class="mt-3">No messages</h3>
 } @else {
 <table class="table table-hover mt-3" style="cursor: pointer">
   <thead>
@@ -53,7 +53,7 @@
         <div>
           <img
             [src]="
-              container === 'Outbox'
+              isOutbox
                 ? message.recipientPhotoUrl || './assets/user.png'
                 : message.senderPhotoUrl || './assets/user.png'
             "
@@ -61,7 +61,7 @@
             class="rounded-circle me-2"
           />
           <strong>{{
-            container === "Outbox"
+            isOutbox
               ? message.recipientUsername
               : message.senderUsername
           }}</strong>
@@ -74,7 +74,7 @@
     }
   </tbody>
 </table>
-} @if(messageService.paginatedResult()?.pagination) {
+} @if(messageService.paginatedResult()?.pagination && messageService.paginatedResult()?.pagination?.totalItems! > 0) {
 <div class="d-flex justify-content-center">
   <pagination
     [boundaryLinks]="true"
