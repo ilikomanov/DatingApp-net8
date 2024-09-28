@@ -28,6 +28,7 @@ app.UseAuthorization(); //Never put them after "MapControllers"
 
 app.MapControllers();
 app.MapHub<PresenceHub>("hubs/presence");
+app.MapHub<MessageHub>("hubs/message");
 
 using var scope = app.Services.CreateScope();
 var services = scope.ServiceProvider;
