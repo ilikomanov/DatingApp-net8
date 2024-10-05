@@ -25,6 +25,9 @@ app.UseCors(x => x.AllowAnyHeader().AllowAnyMethod().AllowCredentials()
 app.UseAuthentication(); //"UseAuthentication" is always first of "UseAuthorization"
 app.UseAuthorization(); //Never put them after "MapControllers"
 
+//must be below "UseAuthentication" and "UseAuthorization"
+app.UseDefaultFiles();
+app.UseStaticFiles();
 
 app.MapControllers();
 app.MapHub<PresenceHub>("hubs/presence");
