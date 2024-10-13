@@ -1,1 +1,5 @@
-{}
+{
+  "appService.preDeployTask": "publish-release",
+  "appService.deploySubpath": "API\\bin\\Release\\net8.0\\publish",
+  "appService.defaultWebAppToDeploy": "/subscriptions/bbaa958d-ef6b-4c42-823e-82aeea4c531e/resourceGroups/DA-VSC-Resources/providers/Microsoft.Web/sites/dating-app-vsc"
+}
