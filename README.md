@@ -32,8 +32,8 @@
 - Using SignalR for real time presence and live messaging between users
 - Many more things as well
 
-  
 ## Third parties and additional resourses used:
+
 - https://cloudinary.com/https://v17.angular.io/guide/setup-local - Angular
 - https://github.com/FiloSottile/mkcert
 - https://getbootstrap.com/docs/5.3/examples/carousel/ - nav component
@@ -42,7 +42,7 @@
 - https://bootswatch.com/united/ - Bootswatch theme used
 - https://json-generator.com/ - used to generate random users
 - https://transform.tools/json-to-typescript - used to create "Member" interface from "Username" JSON data.
-- https://dbeaver.io/ - used to interact with DataBase and change picture to one user from 11 to 12  pictures from random user
+- https://dbeaver.io/ - used to interact with DataBase and change picture to one user from 11 to 12 pictures from random user
 - https://valor-software.com/ngx-bootstrap/#/components/tabs?tab=overview - Bootstrap tabs used.
 - https://ngx-gallery.netlify.app/#/ - Gallery used in project.
 - https://www.npmjs.com/package/ngx-spinner - spinner used.
@@ -54,4 +54,3 @@
 - https://valor-software.com/ngx-bootstrap/#/components/buttons?tab=overview - button used
 - https://www.npmjs.com/package/ngx-timeago - ngx-timeago
 - https://valor-software.com/ngx-bootstrap/#/components/modals?tab=overview - modals
-
