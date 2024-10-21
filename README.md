@@ -36,11 +36,11 @@
 
   
 ## Third parties and additional resourses used
-https://cloudinary.com/https://v17.angular.io/guide/setup-local - Angular
-https://github.com/FiloSottile/mkcert
-https://getbootstrap.com/docs/5.3/examples/carousel/ - nav component
-https://valor-software.com/ngx-bootstrap/#/components/dropdowns?tab=api - dropdown menu
-https://www.npmjs.com/package/ngx-toastr - toastr
+- https://cloudinary.com/https://v17.angular.io/guide/setup-local - Angular
+- https://github.com/FiloSottile/mkcert
+- https://getbootstrap.com/docs/5.3/examples/carousel/ - nav component
+- https://valor-software.com/ngx-bootstrap/#/components/dropdowns?tab=api - dropdown menu
+- https://www.npmjs.com/package/ngx-toastr - toastr
 https://bootswatch.com/united/ - Bootswatch theme used
 https://json-generator.com/ - used to generate random users
 https://transform.tools/json-to-typescript - used to create "Member" interface from "Username" JSON data.
