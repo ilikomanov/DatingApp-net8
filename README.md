@@ -40,11 +40,11 @@
 - https://www.npmjs.com/package/ngx-toastr - toastr
 - https://bootswatch.com/united/ - Bootswatch theme used
 - https://json-generator.com/ - used to generate random users
-- https://transform.tools/json-to-typescript - used to create "Member" interface from "Username" JSON data.
+- https://transform.tools/json-to-typescript - used to create "Member" interface from "Username" JSON data
 - https://dbeaver.io/ - used to interact with DataBase and change picture to one user from 11 to 12 pictures from random user
-- https://valor-software.com/ngx-bootstrap/#/components/tabs?tab=overview - Bootstrap tabs used.
-- https://ngx-gallery.netlify.app/#/ - Gallery used in project.
-- https://www.npmjs.com/package/ngx-spinner - spinner used.
+- https://valor-software.com/ngx-bootstrap/#/components/tabs?tab=overview - Bootstrap tabs used
+- https://ngx-gallery.netlify.app/#/ - Gallery used in project
+- https://www.npmjs.com/package/ngx-spinner - spinner used
 - https://cloudinary.com/ - upload photo
 - https://www.npmjs.com/package/ng2-file-upload - added in project
 - https://valor-software.com/ng2-file-upload/ - ng file uploader
