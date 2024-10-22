@@ -24,7 +24,7 @@
 - Adding routing to the Angular application and securing routes.
 - Using Automapper in ASP.NET Core
 - Building a great looking UI using Bootstrap
-- Adding Photo Upload functionality as well as a cool looking gallery in Angular
+- Adding Photo Upload functionality and a gallery in Angular
 - Angular Template forms and Reactive forms and validation
 - Paging, Sorting and Filtering
 - Adding a Private Messaging system to the app
