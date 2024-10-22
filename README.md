@@ -28,7 +28,6 @@
 - Angular Template forms and Reactive forms and validation
 - Paging, Sorting and Filtering
 - Adding a Private Messaging system to the app
-- Publishing the application to Heroku free of charge
 - Using SignalR for real time presence and live messaging between users
 - Many more things as well
 
