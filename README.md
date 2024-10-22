@@ -34,7 +34,6 @@
 
 ## Third parties and additional resourses used:
 
-- https://cloudinary.com/
 - https://v17.angular.io/guide/setup-local - Angular
 - https://github.com/FiloSottile/mkcert
 - https://getbootstrap.com/docs/5.3/examples/carousel/ - nav component
