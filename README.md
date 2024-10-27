@@ -2,7 +2,7 @@
 <h3 align="center">I'm a Juniour Backend Engineer, from Bulgaria.</h3>
 
 <h3 align="left">Contact me: iliyalikomanov@gmail.com</h3>
-<h3 align="left">Check my application: https://dating-app-vsc-hhbgfghaejdxh8a2.germanywestcentral-01.azurewebsites.net/</h3>
+<h3 align="left">Check my application: https://il-dating-app-net8.azurewebsites.net</h3>
 <p align="left">
 </p>
 
