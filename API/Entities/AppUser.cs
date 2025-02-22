@@ -15,10 +15,16 @@ public class AppUser : IdentityUser<int>
     public string? LookingFor { get; set; }
     public required string City { get; set; }
     public required string Country { get; set; }
-    public List<Photo> Photos { get; set; } = [];
-    public List<UserLike> LikedByUsers { get; set; } = [];
-    public List<UserLike> LikedUsers { get; set; } = [];
-    public List<Message> MessagesSent { get; set; } = [];
-    public List<Message> MessagesReceived { get; set; } = [];
-    public ICollection<AppUserRole> UserRoles { get; set; } = [];
+    // public List<Photo> Photos { get; set; } = [];
+    // public List<UserLike> LikedByUsers { get; set; } = [];
+    // public List<UserLike> LikedUsers { get; set; } = [];
+    // public List<Message> MessagesSent { get; set; } = [];
+    // public List<Message> MessagesReceived { get; set; } = [];
+    // public ICollection<AppUserRole> UserRoles { get; set; } = [];
+    public List<Photo> Photos { get; set; } = new List<Photo>();
+    public List<UserLike> LikedByUsers { get; set; } = new List<UserLike>();
+    public List<UserLike> LikedUsers { get; set; } = new List<UserLike>();
+    public List<Message> MessagesSent { get; set; } = new List<Message>();
+    public List<Message> MessagesReceived { get; set; } = new List<Message>();
+    public ICollection<AppUserRole> UserRoles { get; set; } = new List<AppUserRole>();
 }
