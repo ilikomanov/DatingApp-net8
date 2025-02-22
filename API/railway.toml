@@ -1,0 +1,7 @@
+[build]
+builder = "dockerfile"
+dockerfilePath = ".API/Dockerfile"
+
+[deploy]
+startCommand = "./API.dll"
+restartPolicyType = "always"
