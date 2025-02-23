@@ -17,7 +17,7 @@ public class PresenceTracker
             }
             else
             {
-                OnlineUsers.Add(username, [connectionId]);
+                OnlineUsers.Add(username, new List<string> { connectionId });
                 isOnline = true;
             }
         }
@@ -67,7 +67,7 @@ public class PresenceTracker
         }
         else
         {
-            connectionIds = [];
+            connectionIds = new List<string>();
         }
 
         return Task.FromResult(connectionIds);
