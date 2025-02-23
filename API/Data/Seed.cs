@@ -51,6 +51,7 @@ public class Seed
         };
 
         await userManager.CreateAsync(admin, "Pa$$w0rd");
-        await userManager.AddToRolesAsync(admin, ["Admin", "Moderator"]);
+        await userManager.AddToRolesAsync(admin, new List<string> { "Admin", "Moderator" });
+
     }
 }
