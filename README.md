@@ -1,4 +1,4 @@
-<h1 align="center">Hi 👋, I'm Iliya Likomanov Test commit</h1> 
+<h1 align="center">Hi 👋, I'm Iliya Likomanov</h1> 
 <h3 align="center">I'm a Juniour Backend Engineer, from Bulgaria.</h3>
 
 <h3 align="left">Contact me: iliyalikomanov@gmail.com</h3>
