@@ -1,5 +1,3 @@
-using System.Security.Cryptography;
-using System.Text;
 using System.Text.Json;
 using API.Entities;
 using Microsoft.AspNetCore.Identity;
@@ -11,46 +9,65 @@ public class Seed
 {
     public static async Task SeedUsers(UserManager<AppUser> userManager, RoleManager<AppRole> roleManager)
     {
+        // Skip if users already exist
         if (await userManager.Users.AnyAsync()) return;
 
+        // Load user data
         var userData = await File.ReadAllTextAsync("Data/UserSeedData.json");
-
         var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-
         var users = JsonSerializer.Deserialize<List<AppUser>>(userData, options);
 
-        if (users == null) return;
+        if (users == null || users.Count == 0) return;
 
+        // Define roles
         var roles = new List<AppRole>
         {
-            new() {Name = "Member"},
-            new() {Name = "Admin"},
-            new() {Name = "Moderator"}
+            new() { Name = "Member" },
+            new() { Name = "Admin" },
+            new() { Name = "Moderator" }
         };
 
+        // Create roles if they don't exist
         foreach (var role in roles)
         {
-            await roleManager.CreateAsync(role);
+            if (!await roleManager.RoleExistsAsync(role.Name))
+            {
+                await roleManager.CreateAsync(role);
+            }
         }
 
+        // Create users
         foreach (var user in users)
         {
             user.Photos.First().IsApproved = true;
             user.UserName = user.UserName!.ToLower();
-            await userManager.CreateAsync(user, "Pa$$w0rd");
-            await userManager.AddToRoleAsync(user, "Member");
+
+            var result = await userManager.CreateAsync(user, "Pa$$w0rd");
+
+            if (result.Succeeded)
+            {
+                await userManager.AddToRoleAsync(user, "Member");
+            }
         }
 
-        var admin = new AppUser
+        // Create admin user if not exists
+        if (await userManager.FindByNameAsync("admin") == null)
         {
-            UserName = "admin",
-            KnownAs = "Admin",
-            Gender = "",
-            City = "",
-            Country = ""
-        };
+            var admin = new AppUser
+            {
+                UserName = "admin",
+                KnownAs = "Admin",
+                Gender = "male",
+                City = "Adminville",
+                Country = "Nowhere"
+            };
 
-        await userManager.CreateAsync(admin, "Pa$$w0rd");
-        await userManager.AddToRolesAsync(admin, ["Admin", "Moderator"]);
+            var result = await userManager.CreateAsync(admin, "Pa$$w0rd");
+
+            if (result.Succeeded)
+            {
+                await userManager.AddToRolesAsync(admin, new[] { "Admin", "Moderator" });
+            }
+        }
     }
 }
