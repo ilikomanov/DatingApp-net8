@@ -63,7 +63,8 @@ public class Seed
             };
 
             var result = await userManager.CreateAsync(admin, "Pa$$w0rd");
-
+            Console.WriteLine("Admin created: " + result.Succeeded);
+            
             if (result.Succeeded)
             {
                 await userManager.AddToRolesAsync(admin, new[] { "Admin", "Moderator" });
