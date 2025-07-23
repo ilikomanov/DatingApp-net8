@@ -12,6 +12,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddApplicationServices(builder.Configuration);
 builder.Services.AddIdentityServices(builder.Configuration);
 builder.Services.AddHttpLogging(o => { });
+builder.Services.AddDbContext<DataContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 var app = builder.Build();
 
@@ -42,7 +44,7 @@ try
     var userManager = services.GetRequiredService<UserManager<AppUser>>();
     var roleManager = services.GetRequiredService<RoleManager<AppRole>>();
     await context.Database.MigrateAsync();
-    await context.Database.ExecuteSqlRawAsync("DELETE FROM [Connections]");
+    await context.Database.ExecuteSqlRawAsync("DELETE FROM \"Connections\"");
     await Seed.SeedUsers(userManager, roleManager);
 }
 catch (Exception ex)
