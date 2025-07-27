@@ -70,5 +70,21 @@ public class Seed
                 await userManager.AddToRolesAsync(admin, new[] { "Admin", "Moderator" });
             }
         }
+
+        var adminExists = await userManager.FindByNameAsync("admin");
+        if (adminExists == null)
+        {
+          var admin = new AppUser
+             {
+              UserName = "admin",
+              KnownAs = "Admin",
+              Gender = "",
+              City = "",
+             Country = ""
+             };
+
+           await userManager.CreateAsync(admin, "Pa$$w0rd");
+           await userManager.AddToRolesAsync(  , new[] { "Admin", "Moderator" });
+        } 
     }
 }
