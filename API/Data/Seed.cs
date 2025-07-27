@@ -9,6 +9,7 @@ public class Seed
 {
     public static async Task SeedUsers(UserManager<AppUser> userManager, RoleManager<AppRole> roleManager)
     {
+         Console.WriteLine("Starting user seeding...");
         // Skip if users already exist
         if (await userManager.Users.AnyAsync()) return;
 
@@ -65,10 +66,25 @@ public class Seed
             var result = await userManager.CreateAsync(admin, "Pa$$w0rd");
             Console.WriteLine("Admin created: " + result.Succeeded);
             
-            if (result.Succeeded)
+           if (!result.Succeeded)
+    {
+        foreach (var error in result.Errors)
+        {
+            Console.WriteLine($"Error creating admin: {error.Code} - {error.Description}");
+        }
+    }
+    else
+    {
+        var roleResult = await userManager.AddToRolesAsync(admin, new[] { "Admin", "Moderator" });
+        Console.WriteLine("Admin roles added success: " + roleResult.Succeeded);
+        if (!roleResult.Succeeded)
+        {
+            foreach (var error in roleResult.Errors)
             {
-                await userManager.AddToRolesAsync(admin, new[] { "Admin", "Moderator" });
+                Console.WriteLine($"Error adding roles to admin: {error.Code} - {error.Description}");
             }
+        }
+    }
         }
     }
 }
