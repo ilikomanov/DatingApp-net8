@@ -12,22 +12,22 @@ public class Seed
         // Skip if users already exist
         if (await userManager.Users.AnyAsync()) return;
 
-        // Load user data from JSON
+        // Load user data
         var userData = await File.ReadAllTextAsync("Data/UserSeedData.json");
         var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
         var users = JsonSerializer.Deserialize<List<AppUser>>(userData, options);
 
         if (users == null || users.Count == 0) return;
 
-        // Define app roles
+        // Define roles
         var roles = new List<AppRole>
         {
-            new AppRole { Name = "Member" },
-            new AppRole { Name = "Admin" },
-            new AppRole { Name = "Moderator" }
+            new() { Name = "Member" },
+            new() { Name = "Admin" },
+            new() { Name = "Moderator" }
         };
 
-        // Create roles if not already existing
+        // Create roles if they don't exist
         foreach (var role in roles)
         {
             if (!await roleManager.RoleExistsAsync(role.Name))
@@ -36,7 +36,7 @@ public class Seed
             }
         }
 
-        // Seed each user
+        // Create users from JSON
         foreach (var user in users)
         {
             user.Photos.First().IsApproved = true;
@@ -50,9 +50,8 @@ public class Seed
             }
         }
 
-        // Create Admin user
-        var adminUser = await userManager.FindByNameAsync("admin");
-        if (adminUser == null)
+        // Create admin user if not exists
+        if (await userManager.FindByNameAsync("admin") == null)
         {
             var admin = new AppUser
             {
@@ -63,20 +62,12 @@ public class Seed
                 Country = "Nowhere"
             };
 
-            var adminResult = await userManager.CreateAsync(admin, "Pa$$w0rd");
-
-            if (adminResult.Succeeded)
+            var result = await userManager.CreateAsync(admin, "Pa$$w0rd");
+            Console.WriteLine("Admin created: " + result.Succeeded);
+            
+            if (result.Succeeded)
             {
                 await userManager.AddToRolesAsync(admin, new[] { "Admin", "Moderator" });
-                Console.WriteLine("Admin user seeded.");
-            }
-            else
-            {
-                Console.WriteLine("Failed to seed admin user:");
-                foreach (var error in adminResult.Errors)
-                {
-                    Console.WriteLine($" - {error.Description}");
-                }
             }
         }
     }
