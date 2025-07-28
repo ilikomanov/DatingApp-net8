@@ -130,7 +130,7 @@ public class AdminController(UserManager<AppUser> userManager, IUnitOfWork unitO
 
         // Remove likes and messages
         unitOfWork.LikesRepository.RemoveUserLikes(user.Id);
-        unitOfWork.MessageRepository.RemoveUserMessages(user.Id);
+        unitOfWork.MessageRepository.RemoveUserMessages(user.UserName);
 
         // Remove from roles
         var userRoles = await userManager.GetRolesAsync(user);
