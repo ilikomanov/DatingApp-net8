@@ -88,24 +88,24 @@ public class Seed
         }
     }
 
-    //delete
+    //how to delete user - and uncomment the line in Program.cs
     public static async Task DeleteUser(UserManager<AppUser> userManager, string username)
     {
         var user = await userManager.FindByNameAsync(username.ToLower());
         if (user == null)
         {
-            Console.WriteLine($"❌ User '{username}' not found.");
+            Console.WriteLine($"User '{username}' not found.");
             return;
         }
 
         var result = await userManager.DeleteAsync(user);
         if (result.Succeeded)
         {
-            Console.WriteLine($"✅ User '{username}' deleted successfully.");
+            Console.WriteLine($"User '{username}' deleted successfully.");
         }
         else
         {
-            Console.WriteLine($"❌ Failed to delete '{username}':");
+            Console.WriteLine($"Failed to delete '{username}':");
             foreach (var error in result.Errors)
                 Console.WriteLine($"- {error.Description}");
         }
