@@ -46,36 +46,7 @@ try
     await context.Database.MigrateAsync();
     await context.Database.ExecuteSqlRawAsync("DELETE FROM \"Connections\"");
     await Seed.SeedUsers(userManager, roleManager);
-    //delete
-    var existingAdmin = await userManager.FindByNameAsync("admin");
-    if (existingAdmin == null)
-    {
-        var admin = new AppUser
-        {
-            UserName = "admin",
-            KnownAs = "Admin",
-            Gender = "male",
-            City = "Adminville",
-            Country = "Nowhere"
-        };
 
-        var result = await userManager.CreateAsync(admin, "Pa$$w0rd");
-
-        if (result.Succeeded)
-        {
-            await userManager.AddToRolesAsync(admin, new[] { "Admin", "Moderator" });
-            Console.WriteLine("Admin user created successfully.");
-        }
-        else
-        {
-            Console.WriteLine("Failed to create admin:");
-            foreach (var error in result.Errors)
-            {
-                Console.WriteLine($"- {error.Description}");
-            }
-        }
-    }
-    //delete
     Console.WriteLine("Seeding complete"); // or log here
 }
 catch (Exception ex)
