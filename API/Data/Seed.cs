@@ -9,7 +9,7 @@ public class Seed
 {
     public static async Task SeedUsers(UserManager<AppUser> userManager, RoleManager<AppRole> roleManager)
     {
-         Console.WriteLine("Starting user seeding...");
+        Console.WriteLine("Starting user seeding...");
         // Skip if users already exist
         if (await userManager.Users.AnyAsync()) return;
 
@@ -65,26 +65,50 @@ public class Seed
 
             var result = await userManager.CreateAsync(admin, "Pa$$w0rd");
             Console.WriteLine("Admin created: " + result.Succeeded);
-            
-           if (!result.Succeeded)
-    {
-        foreach (var error in result.Errors)
-        {
-            Console.WriteLine($"Error creating admin: {error.Code} - {error.Description}");
-        }
-    }
-    else
-    {
-        var roleResult = await userManager.AddToRolesAsync(admin, new[] { "Admin", "Moderator" });
-        Console.WriteLine("Admin roles added success: " + roleResult.Succeeded);
-        if (!roleResult.Succeeded)
-        {
-            foreach (var error in roleResult.Errors)
+
+            if (!result.Succeeded)
             {
-                Console.WriteLine($"Error adding roles to admin: {error.Code} - {error.Description}");
+                foreach (var error in result.Errors)
+                {
+                    Console.WriteLine($"Error creating admin: {error.Code} - {error.Description}");
+                }
+            }
+            else
+            {
+                var roleResult = await userManager.AddToRolesAsync(admin, new[] { "Admin", "Moderator" });
+                Console.WriteLine("Admin roles added success: " + roleResult.Succeeded);
+                if (!roleResult.Succeeded)
+                {
+                    foreach (var error in roleResult.Errors)
+                    {
+                        Console.WriteLine($"Error adding roles to admin: {error.Code} - {error.Description}");
+                    }
+                }
             }
         }
     }
+
+    //delete
+    public static async Task DeleteUser(UserManager<AppUser> userManager, string username)
+    {
+        var user = await userManager.FindByNameAsync(username.ToLower());
+        if (user == null)
+        {
+            Console.WriteLine($"❌ User '{username}' not found.");
+            return;
+        }
+
+        var result = await userManager.DeleteAsync(user);
+        if (result.Succeeded)
+        {
+            Console.WriteLine($"✅ User '{username}' deleted successfully.");
+        }
+        else
+        {
+            Console.WriteLine($"❌ Failed to delete '{username}':");
+            foreach (var error in result.Errors)
+                Console.WriteLine($"- {error.Description}");
         }
     }
+
 }
