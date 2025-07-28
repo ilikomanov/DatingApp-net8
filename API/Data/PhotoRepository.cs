@@ -32,4 +32,9 @@ public class PhotoRepository(DataContext context) : IPhotoRepository
     {
         context.Photos.Remove(photo);
     }
+
+    public void RemovePhotos(List<Photo> photos)
+    {
+        context.Photos.RemoveRange(photos);
+    }
 }

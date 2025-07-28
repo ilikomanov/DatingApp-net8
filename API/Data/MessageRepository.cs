@@ -96,4 +96,12 @@ public class MessageRepository(DataContext context, IMapper mapper) : IMessageRe
     {
         context.Connections.Remove(connection);
     }
+
+    public void RemoveUserMessages(string username)
+    {
+        var messagesToRemove = context.Messages
+            .Where(m => m.SenderUsername == username || m.RecipientUsername == username);
+
+        context.Messages.RemoveRange(messagesToRemove);
+    }
 }

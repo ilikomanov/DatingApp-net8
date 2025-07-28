@@ -64,4 +64,12 @@ public class LikesRepository(DataContext context, IMapper mapper) : ILikesReposi
 
         return await PagedList<MemberDto>.CreateAsync(query, likesParams.PageNumber, likesParams.PageSize);
     }
+
+    public void RemoveUserLikes(int userId)
+    {
+        var likesToRemove = context.Likes
+            .Where(l => l.SourceUserId == userId || l.TargetUserId == userId);
+
+        context.Likes.RemoveRange(likesToRemove);
+    }
 }

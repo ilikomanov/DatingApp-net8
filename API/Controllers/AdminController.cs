@@ -109,4 +109,40 @@ public class AdminController(UserManager<AppUser> userManager, IUnitOfWork unitO
 
         return Ok();
     }
+
+    [Authorize(Policy = "RequireAdminRole")]
+    [HttpDelete("delete-user/{username}")]
+    public async Task<ActionResult> DeleteUser(string username)
+    {
+        var user = await userManager.Users
+            .Include(u => u.Photos)
+            .Include(u => u.LikedByUsers)
+            .Include(u => u.LikedUsers)
+            .Include(u => u.MessagesSent)
+            .Include(u => u.MessagesReceived)
+            .FirstOrDefaultAsync(u => u.UserName == username.ToLower());
+
+        if (user == null) return NotFound("User not found");
+
+        // Remove associated photos
+        if (user.Photos.Any())
+            unitOfWork.PhotoRepository.RemovePhotos(user.Photos.ToList());
+
+        // Remove likes and messages
+        unitOfWork.LikesRepository.RemoveUserLikes(user.Id);
+        unitOfWork.MessageRepository.RemoveUserMessages(user.Id);
+
+        // Remove from roles
+        var userRoles = await userManager.GetRolesAsync(user);
+        if (userRoles.Any())
+            await userManager.RemoveFromRolesAsync(user, userRoles);
+
+        // Delete the user via UserManager
+        var result = await userManager.DeleteAsync(user);
+        if (!result.Succeeded) return BadRequest("Failed to delete user");
+
+        await unitOfWork.Complete();
+
+        return Ok("User deleted successfully");
+    }
 }
