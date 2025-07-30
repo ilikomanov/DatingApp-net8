@@ -13,7 +13,7 @@ namespace API.Controllers;
 
 public class AccountController(UserManager<AppUser> userManager, ITokenService tokenService, IMapper mapper) : BaseApiController
 {
-    [HttpPost("register")] //account/register
+    [HttpPost("register")] //account/register test
     public async Task<ActionResult<UserDto>> Register(RegisterDto registerDto)
     {
         if (await UserExists(registerDto.Username)) return BadRequest("Username is taken");
