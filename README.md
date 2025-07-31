@@ -13,6 +13,12 @@
 
 <div align="center">
   <img src="https://github-readme-stats.vercel.app/api/top-langs/?username=ilikomanov&layout=compact&langs_count=5&theme=dracula&hide_progress=false" height="195" alt="languages graph" />
+### 📊 Language Breakdown (DatingApp-net8):
+
+🟦 C#: 80.5%  
+🟨 HTML: 10.2%  
+🟧 TypeScript: 8.3%
+
 </div>
 
 ## Here are some of the technologies used to develop the application:
