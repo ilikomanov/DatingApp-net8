@@ -13,11 +13,13 @@
 
 <div align="center">
   <img src="https://github-readme-stats.vercel.app/api/top-langs/?username=ilikomanov&layout=compact&langs_count=5&theme=dracula&hide_progress=false" height="195" alt="languages graph" />
-### 📊 Language Breakdown (DatingApp-net8):
 
-🟦 C#: 80.5%  
-🟨 HTML: 10.2%  
-🟧 TypeScript: 8.3%
+<div style="display: flex; height: 20px; width: 100%; border: 1px solid #ccc; border-radius: 4px; overflow: hidden;">
+  <div style="width: 50%; background-color: #178600;" title="C# - 50%"></div>
+  <div style="width: 28%; background-color: #3178c6;" title="TypeScript - 28%"></div>
+  <div style="width: 15%; background-color: #e34c26;" title="HTML - 15%"></div>
+  <div style="width: 7%; background-color: #e38c00;" title="SQL - 7%"></div>
+</div>
 
 </div>
 
