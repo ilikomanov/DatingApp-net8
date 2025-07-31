@@ -13,7 +13,7 @@
 
 ### 📊 Language Usage in `DatingApp-net8`
 
-![Language Usage Bar](https://i.imgur.com/7fUj8kx.png)
+![Language Usage Bar](./client/src/assets/language_bar_with_labels.png)
 
 - 🟩 **C#** – 50%
 - 🔵 **TypeScript** – 28%
