@@ -12,7 +12,7 @@
 ###
 
 <div align="center">
-  <img src="https://github-readme-stats.vercel.app/api/top-langs/?username=ilikomanov&layout=compact&langs_count=5&theme=dracula&hide_progress=false" height="195" alt="languages graph" />
+ 
 
 <div style="display: flex; height: 20px; width: 100%; border: 1px solid #ccc; border-radius: 4px; overflow: hidden;">
   <div style="width: 50%; background-color: #178600;" title="C# - 50%"></div>
