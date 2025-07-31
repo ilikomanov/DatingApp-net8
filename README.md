@@ -11,17 +11,18 @@
 
 ###
 
-<div align="center">
- 
+### 📊 Language Usage in `DatingApp-net8`
 
-<div style="display: flex; height: 20px; width: 100%; border: 1px solid #ccc; border-radius: 4px; overflow: hidden;">
-  <div style="width: 50%; background-color: #178600;" title="C# - 50%"></div>
-  <div style="width: 28%; background-color: #3178c6;" title="TypeScript - 28%"></div>
-  <div style="width: 15%; background-color: #e34c26;" title="HTML - 15%"></div>
-  <div style="width: 7%; background-color: #e38c00;" title="SQL - 7%"></div>
-</div>
+![Language Usage Bar](https://i.imgur.com/7fUj8kx.png)
 
-</div>
+- 🟩 **C#** – 50%
+- 🔵 **TypeScript** – 28%
+- 🔴 **HTML** – 15%
+- 🟠 **SQL** – 7%
+
+---
+
+## 🧪 Here are some of the technologies used to develop the application:
 
 ## Here are some of the technologies used to develop the application:
 
