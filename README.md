@@ -12,7 +12,7 @@
 ###
 
 <div align="center">
-  <img src="https://github-readme-stats.vercel.app/api/top-langs?username=ilikomanov&locale=en&hide_title=false&layout=compact&card_width=320&langs_count=5&theme=dracula&hide_border=false" height="150" alt="languages graph"  />
+  <img src="https://github-readme-stats.vercel.app/api/top-langs?username=ilikomanov&layout=default&langs_count=5&theme=dracula&hide_border=false" height="195" alt="languages graph" />
 </div>
 
 ## Here are some of the technologies used to develop the application:
