@@ -9,22 +9,20 @@
 <h3 align="left">Languages and Tools:</h3>
 <p align="left"> <a href="https://www.w3schools.com/cs/" target="_blank" rel="noreferrer"> <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/csharp/csharp-original.svg" alt="csharp" width="40" height="40"/> </a> <a href="https://angular.io" target="_blank" rel="noreferrer"> <img src="https://angular.io/assets/images/logos/angular/angular.svg" alt="angular" width="40" height="40"/> </a> <a href="https://azure.microsoft.com/en-in/" target="_blank" rel="noreferrer"> <img src="https://www.vectorlogo.zone/logos/microsoft_azure/microsoft_azure-icon.svg" alt="azure" width="40" height="40"/> </a> <a href="https://dotnet.microsoft.com/" target="_blank" rel="noreferrer"> <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/dot-net/dot-net-original-wordmark.svg" alt="dotnet" width="40" height="40"/> </a> <a href="https://nodejs.org" target="_blank" rel="noreferrer"> <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/nodejs/nodejs-original-wordmark.svg" alt="nodejs" width="40" height="40"/> </a> <a href="https://www.sqlite.org/" target="_blank" rel="noreferrer"> <img src="https://www.vectorlogo.zone/logos/sqlite/sqlite-icon.svg" alt="sqlite" width="40" height="40"/> </a> </p>
 
-###
 
 ### 📊 Language Usage in `DatingApp-net8`
 
 ![Language Usage Bar](./client/src/assets/language_bar_with_labels.png)
 
-- 🟩 **C#** – 50%
-- 🔵 **TypeScript** – 28%
-- 🔴 **HTML** – 15%
-- 🟠 **SQL** – 7%
+- 🟢 **C#** – 54.1%
+- 🔵 **TypeScript** – 28.2%
+- 🔴 **HTML** – 15.9%
+- 🟠 **CSS** – 1.6%
+- 🟡 **Dockerfile** – 1.6%
 
 ---
 
 ## 🧪 Here are some of the technologies used to develop the application:
-
-## Here are some of the technologies used to develop the application:
 
 - Setting up the developer environment
 - Creating the ASP.NET Core WebAPI and the Angular app using the DotNet CLI and the Angular CLI
@@ -40,7 +38,7 @@
 - Using SignalR for real time presence and live messaging between users
 - Many more things as well
 
-## Third parties and additional resourses used:
+## 🧩 Third parties and additional resourses used:
 
 - https://v17.angular.io/guide/setup-local - Angular
 - https://github.com/FiloSottile/mkcert
