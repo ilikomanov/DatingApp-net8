@@ -71,5 +71,47 @@ namespace DatingApp.Tests.Controllers
             var returnValue = Assert.IsAssignableFrom<IEnumerable<MemberDto>>(okResult.Value);
             returnValue.Should().HaveCount(1);
         }
+
+        [Fact]
+        public async Task GetUser_ReturnsMemberDto_WhenUserExists()
+        {
+            // Arange
+            var username = "testuser";
+            var member = new MemberDto { Username = username };
+
+            _mockUnitOfWork.Setup(u => u.UserRepository.GetMemberAsync(username, true))
+                .ReturnsAsync(member);
+
+            // Act
+            var result = await _controller.GetUser(username);
+
+            // Assert
+            result.Value.Should().NotBeNull();
+            result.Value.Should().Be(username);
+        }   
+
+        [Fact]
+        public async Task GetUsers_ReturnsEmptyList_WhenNoUsersFound()
+        {
+            // Arrange
+            var pagedList = new PagedList<MemberDto>(
+                items: new List<MemberDto>(),
+                count: 0,
+                pageNumber: 1,
+                pageSize: 10
+            );
+
+            _mockUnitOfWork.Setup(u => u.UserRepository.GetMembersAsync(It.IsAny<UserParams>()))
+                .ReturnsAsync(pagedList);
+
+            // Act
+            var result = await _controller.GetUsers(new UserParams());
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result.Result);
+            var returnValue = Assert.IsAssignableFrom<IEnumerable<MemberDto>>(okResult.Value);
+            returnValue.Should().BeEmpty();
+        }
+
     }
 }
