@@ -154,5 +154,31 @@ namespace DatingApp.Tests.Controllers
             result.Value.Should().BeNull();
         }
 
+        [Fact]
+        public async Task UpdateUser_ReturnsNoContent_WhenUpdateIsSuccessful()
+        {
+            // Arrange
+            var updateDto = new MemberUpdateDto { Introduction = "Hello!" };
+            var user = new AppUser
+            {
+                UserName = "testuser",
+                KnownAs = "Test",
+                Gender = "Male",
+                City = "TestCity",
+                Country = "TestCountry"
+            };
+
+            _mockUnitOfWork.Setup(u => u.UserRepository.GetUserByUsernameAsync("testuser"))
+                .ReturnsAsync(user);
+
+            _mockUnitOfWork.Setup(u => u.Complete())
+                .ReturnsAsync(true);
+
+            // Act
+            var result = await _controller.UpdateUser(updateDto);
+
+            // Assert
+            result.Should().BeOfType<NoContentResult>();
+        }
     }
 }
