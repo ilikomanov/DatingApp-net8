@@ -198,5 +198,34 @@ namespace DatingApp.Tests.Controllers
             badRequest.Value.Should().Be("Could not find user");
         }
 
+        [Fact]
+        public async Task UpdateUser_ReturnsBadRequest_WhenSaveFails()
+        {
+            // Arrange
+            var updateDto = new MemberUpdateDto { Introduction = "Update" };
+            var user = new AppUser
+            {
+                UserName = "testuser",
+                KnownAs = "Test",
+                Gender = "Male",
+                City = "TestCity",
+                Country = "TestCountry"
+            };
+
+            _mockUnitOfWork.Setup(u => u.UserRepository.GetUserByUsernameAsync("testuser"))
+                .ReturnsAsync(user);
+
+            _mockUnitOfWork.Setup(u => u.Complete())
+                .ReturnsAsync(false);
+
+            // Act
+            var result = await _controller.UpdateUser(updateDto);
+
+            // Assert
+            var badRequest = Assert.IsType<BadRequestObjectResult>(result);
+            badRequest.Value.Should().Be("Failed to update the user");
+        }
+
+
     }
 }
