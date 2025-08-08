@@ -155,6 +155,38 @@ namespace DatingApp.Tests.Controllers
         }
 
         [Fact]
+        public async Task GetUser_CallsRepoWithIsCurrentUserTrue_WhenUsernameMatchesCurrentUser()
+        {
+             // Arrange
+            var username = "testuser";
+            var member = new MemberDto { Username = username };
+
+            var claims = new List<Claim> { new Claim(ClaimTypes.Name, username) };
+            var identity = new ClaimsIdentity(claims, "TestAuth");
+            var claimsPrincipal = new ClaimsPrincipal(identity);
+
+            var httpContext = new DefaultHttpContext
+            {
+                User = claimsPrincipal
+            };
+
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = httpContext
+            };
+
+            _mockUnitOfWork.Setup(u => u.UserRepository.GetMemberAsync(username, true))
+                .ReturnsAsync(member);
+
+            // Act
+            var result = await _controller.GetUser(username);
+
+            // Assert
+            result.Value.Should().NotBeNull();
+            result.Value!.Username.Should().Be(username);
+        }
+
+        [Fact]
         public async Task UpdateUser_ReturnsNoContent_WhenUpdateIsSuccessful()
         {
             // Arrange
