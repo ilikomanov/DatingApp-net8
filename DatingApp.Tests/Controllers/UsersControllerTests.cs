@@ -292,7 +292,7 @@ namespace DatingApp.Tests.Controllers
             var badRequest = Assert.IsType<BadRequestObjectResult>(result);
             badRequest.Value.Should().Be("Failed to update the user");
         }
-        
+
         [Fact]
         public async Task UpdateUser_ReturnsBadRequest_WhenUserDoesNotExist()
         {
@@ -323,5 +323,48 @@ namespace DatingApp.Tests.Controllers
             var badRequest = result as BadRequestObjectResult;
             badRequest!.Value.Should().Be("Could not find user");
         }
+        
+        [Fact]
+        public async Task UpdateUser_ReturnsBadRequest_WhenUpdateFails()
+        {
+            // Arrange
+            var username = "testuser";
+            var updateDto = new MemberUpdateDto { Introduction = "Updated intro" };
+            var user = new AppUser
+                    {
+                        UserName = "testuser",
+                        KnownAs = "Test",
+                        Gender = "Male",
+                        City = "TestCity",
+                        Country = "TestCountry"
+                    };
+
+            var claims = new List<Claim> { new Claim(ClaimTypes.Name, username) };
+            var identity = new ClaimsIdentity(claims);
+            var claimsPrincipal = new ClaimsPrincipal(identity);
+
+            var mockHttpContext = new Mock<HttpContext>();
+            mockHttpContext.Setup(c => c.User).Returns(claimsPrincipal);
+
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = mockHttpContext.Object
+            };
+
+            _mockUnitOfWork.Setup(u => u.UserRepository.GetUserByUsernameAsync(username))
+                .ReturnsAsync(user);
+
+            _mockUnitOfWork.Setup(u => u.Complete())
+                .ReturnsAsync(false); // Simulate failure
+
+            // Act
+            var result = await _controller.UpdateUser(updateDto);
+
+            // Assert
+            result.Should().BeOfType<BadRequestObjectResult>();
+            var badRequest = result as BadRequestObjectResult;
+            badRequest!.Value.Should().Be("Failed to update the user");
+        }
+
     }
 }
