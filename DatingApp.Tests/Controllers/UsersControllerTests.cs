@@ -157,7 +157,7 @@ namespace DatingApp.Tests.Controllers
         [Fact]
         public async Task GetUser_CallsRepoWithIsCurrentUserTrue_WhenUsernameMatchesCurrentUser()
         {
-             // Arrange
+            // Arrange
             var username = "testuser";
             var member = new MemberDto { Username = username };
 
@@ -292,7 +292,36 @@ namespace DatingApp.Tests.Controllers
             var badRequest = Assert.IsType<BadRequestObjectResult>(result);
             badRequest.Value.Should().Be("Failed to update the user");
         }
+        
+        [Fact]
+        public async Task UpdateUser_ReturnsBadRequest_WhenUserDoesNotExist()
+        {
+            // Arrange
+            var username = "testuser";
+            var updateDto = new MemberUpdateDto();
 
+            var claims = new List<Claim> { new Claim(ClaimTypes.Name, username) };
+            var identity = new ClaimsIdentity(claims);
+            var claimsPrincipal = new ClaimsPrincipal(identity);
 
+            var mockHttpContext = new Mock<HttpContext>();
+            mockHttpContext.Setup(c => c.User).Returns(claimsPrincipal);
+
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = mockHttpContext.Object
+            };
+
+            _mockUnitOfWork.Setup(u => u.UserRepository.GetUserByUsernameAsync(username))
+                .ReturnsAsync((AppUser?)null); // Simulate user not found
+
+            // Act
+            var result = await _controller.UpdateUser(updateDto);
+
+            // Assert
+            result.Should().BeOfType<BadRequestObjectResult>();
+            var badRequest = result as BadRequestObjectResult;
+            badRequest!.Value.Should().Be("Could not find user");
+        }
     }
 }
