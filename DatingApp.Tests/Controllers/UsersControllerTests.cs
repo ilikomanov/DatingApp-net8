@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using Xunit;
+using CloudinaryDotNet.Actions;
 
 namespace DatingApp.Tests.Controllers
 {
@@ -365,7 +366,7 @@ namespace DatingApp.Tests.Controllers
             var badRequest = result as BadRequestObjectResult;
             badRequest!.Value.Should().Be("Failed to update the user");
         }
-        
+
         [Fact]
         public async Task UpdateUser_ReturnsNoContent_WhenUpdateIsSuccessfulV2()
         {
@@ -373,13 +374,13 @@ namespace DatingApp.Tests.Controllers
             var username = "testuser";
             var updateDto = new MemberUpdateDto { LookingFor = "New expectations" };
             var user = new AppUser
-                    {
-                        UserName = "testuser",
-                        KnownAs = "Test",
-                        Gender = "Male",
-                        City = "TestCity",
-                        Country = "TestCountry"
-                    };
+            {
+                UserName = "testuser",
+                KnownAs = "Test",
+                Gender = "Male",
+                City = "TestCity",
+                Country = "TestCountry"
+            };
 
             var claims = new List<Claim> { new Claim(ClaimTypes.Name, username) };
             var identity = new ClaimsIdentity(claims);
@@ -404,6 +405,56 @@ namespace DatingApp.Tests.Controllers
 
             // Assert
             result.Should().BeOfType<NoContentResult>();
+        }
+
+        [Fact]
+        public async Task AddPhoto_ReturnsBadRequest_WhenPhotoServiceFails()
+        {
+            // Arrange
+            var mockFormFile = new Mock<IFormFile>();
+
+            // Mock the logged-in user context
+            var currentUsername = "testuser";
+            var mockHttpContext = new Mock<HttpContext>();
+            var mockClaimsPrincipal = new ClaimsPrincipal(
+                new ClaimsIdentity(new[]
+                {
+                    new Claim(ClaimTypes.Name, currentUsername)
+                }, "mock")
+            );
+
+            mockHttpContext.Setup(c => c.User).Returns(mockClaimsPrincipal);
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = mockHttpContext.Object
+            };
+
+            // Mock repo to return a valid user
+            var appUser = new AppUser
+            {
+                UserName = "testuser",
+                KnownAs = "Test",
+                Gender = "Male",
+                City = "TestCity",
+                Country = "TestCountry",
+                Photos = new List<Photo>()
+            };
+
+            _mockUnitOfWork.Setup(u => u.UserRepository.GetUserByUsernameAsync(currentUsername))
+                .ReturnsAsync(appUser);
+
+            // Mock photo service to return a result with an Error
+            _mockPhotoService.Setup(p => p.AddPhotoAsync(It.IsAny<IFormFile>()))
+                .ReturnsAsync(new ImageUploadResult
+                {
+                    Error = new Error { Message = "Upload failed" }
+                });
+
+            // Act
+            var result = await _controller.AddPhoto(mockFormFile.Object);
+
+            // Assert
+            result.Result.Should().BeOfType<BadRequestObjectResult>();
         }
     }
 }
