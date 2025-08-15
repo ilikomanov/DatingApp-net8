@@ -547,14 +547,14 @@ namespace DatingApp.Tests.Controllers
             };
 
             var appUser = new AppUser
-                    {
-                        UserName = "testuser",
-                        KnownAs = "Test",
-                        Gender = "Male",
-                        City = "TestCity",
-                        Country = "TestCountry",
-                        Photos = new List<Photo>()
-                    };
+            {
+                UserName = "testuser",
+                KnownAs = "Test",
+                Gender = "Male",
+                City = "TestCity",
+                Country = "TestCountry",
+                Photos = new List<Photo>()
+            };
 
             _mockUnitOfWork.Setup(u => u.UserRepository.GetUserByUsernameAsync(currentUsername))
                 .ReturnsAsync(appUser);
@@ -576,6 +576,56 @@ namespace DatingApp.Tests.Controllers
             result.Result.Should().BeOfType<BadRequestObjectResult>();
             var badRequest = result.Result as BadRequestObjectResult;
             badRequest!.Value.Should().Be("Problem adding photo");
+        }
+
+        [Fact]
+        public async Task AddPhoto_ReturnsBadRequest_WhenPhotoServiceFailsV2()
+        {
+            // Arrange
+            var mockFormFile = new Mock<IFormFile>();
+
+            var currentUsername = "testuser";
+            var mockHttpContext = new Mock<HttpContext>();
+            var mockClaimsPrincipal = new ClaimsPrincipal(
+                new ClaimsIdentity(new[]
+                {
+                    new Claim(ClaimTypes.Name, currentUsername)
+                }, "mock")
+            );
+
+            mockHttpContext.Setup(c => c.User).Returns(mockClaimsPrincipal);
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = mockHttpContext.Object
+            };
+
+            var appUser = new AppUser
+            {
+                UserName = "testuser",
+                        KnownAs = "Test",
+                        Gender = "Male",
+                        City = "TestCity",
+                        Country = "TestCountry",
+                        Photos = new List<Photo>()
+            };
+
+            _mockUnitOfWork.Setup(u => u.UserRepository.GetUserByUsernameAsync(currentUsername))
+                .ReturnsAsync(appUser);
+
+            // Simulate a failure from the photo service
+            _mockPhotoService.Setup(p => p.AddPhotoAsync(It.IsAny<IFormFile>()))
+                .ReturnsAsync(new ImageUploadResult
+                {
+                    Error = new Error { Message = "Upload failed" }
+                });
+
+            // Act
+            var result = await _controller.AddPhoto(mockFormFile.Object);
+
+            // Assert
+            result.Result.Should().BeOfType<BadRequestObjectResult>();
+            var badRequest = result.Result as BadRequestObjectResult;
+            badRequest!.Value.Should().Be("Upload failed");
         }
     }
 }
