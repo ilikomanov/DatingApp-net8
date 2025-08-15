@@ -586,6 +586,53 @@ namespace DatingApp.Tests.Controllers
         }
 
         [Fact]
+        public async Task UpdateUser_ReturnsNoContent_WhenUpdateSucceeds()
+        {
+            // Arrange
+            var currentUsername = "testuser";
+
+            var mockHttpContext = new Mock<HttpContext>();
+            var mockClaimsPrincipal = new ClaimsPrincipal(
+                new ClaimsIdentity(new[]
+                {
+                    new Claim(ClaimTypes.Name, currentUsername)
+                }, "mock")
+            );
+            mockHttpContext.Setup(c => c.User).Returns(mockClaimsPrincipal);
+
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = mockHttpContext.Object
+            };
+
+            var appUser = new AppUser
+            {
+                UserName = currentUsername,
+                KnownAs = "Test",
+                        Gender = "Male",
+                        City = "TestCity",
+                        Country = "TestCountry"
+            };
+
+            _mockUnitOfWork.Setup(u => u.UserRepository.GetUserByUsernameAsync(currentUsername))
+                .ReturnsAsync(appUser);
+
+            var updateDto = new MemberUpdateDto { Introduction = "Updated intro" };
+
+            // Simulate successful save
+            _mockUnitOfWork.Setup(u => u.Complete()).ReturnsAsync(true);
+
+            // Act
+            var result = await _controller.UpdateUser(updateDto);
+
+            // Assert
+            result.Should().BeOfType<NoContentResult>();
+
+            _mockUnitOfWork.Verify(u => u.UserRepository.GetUserByUsernameAsync(currentUsername), Times.Once);
+            _mockUnitOfWork.Verify(u => u.Complete(), Times.Once);
+        }
+
+        [Fact]
         public async Task AddPhoto_ReturnsBadRequest_WhenPhotoServiceFails()
         {
             // Arrange
