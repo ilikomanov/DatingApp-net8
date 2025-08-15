@@ -917,6 +917,68 @@ namespace DatingApp.Tests.Controllers
         }
 
         [Fact]
+        public async Task AddPhoto_ReturnsCreatedAtAction_WhenPhotoAddedSuccessfully()
+        {
+            // Arrange
+            var username = "testuser";
+            var appUser = new AppUser
+            {
+                UserName = username,
+                KnownAs = "Test",
+                        Gender = "Male",
+                        City = "TestCity",
+                        Country = "TestCountry",
+                Photos = new List<Photo>()
+            };
+
+            _mockUnitOfWork.Setup(u => u.UserRepository.GetUserByUsernameAsync(username))
+                .ReturnsAsync(appUser);
+
+            var uploadResult = new ImageUploadResult
+            {
+                SecureUrl = new Uri("http://test.com/photo.jpg"),
+                PublicId = "public123"
+            };
+
+            _mockPhotoService.Setup(p => p.AddPhotoAsync(It.IsAny<IFormFile>()))
+                .ReturnsAsync(uploadResult);
+
+            _mockUnitOfWork.Setup(u => u.Complete())
+                .ReturnsAsync(true);
+
+            var mockHttpContext = new Mock<HttpContext>();
+            var mockClaimsPrincipal = new ClaimsPrincipal(
+                new ClaimsIdentity(new[]
+                {
+                    new Claim(ClaimTypes.Name, username)
+                }, "mock")
+            );
+            mockHttpContext.Setup(c => c.User).Returns(mockClaimsPrincipal);
+
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = mockHttpContext.Object
+            };
+
+            var fileMock = new Mock<IFormFile>();
+            var content = "fake image content";
+            var fileName = "test.jpg";
+            var ms = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(content));
+            fileMock.Setup(_ => _.OpenReadStream()).Returns(ms);
+            fileMock.Setup(_ => _.FileName).Returns(fileName);
+            fileMock.Setup(_ => _.Length).Returns(ms.Length);
+
+            // Act
+            var result = await _controller.AddPhoto(fileMock.Object!);
+
+            // Assert
+            var createdAtAction = result.Result as CreatedAtActionResult;
+            createdAtAction.Should().NotBeNull();
+            createdAtAction!.ActionName.Should().Be(nameof(_controller.GetUser));
+            _mockUnitOfWork.Verify(u => u.Complete(), Times.Once);
+        }
+
+        [Fact]
         public async Task AddPhoto_ReturnsCreatedAtRoute_WhenPhotoAddedSuccessfully()
         {
             // Arrange
