@@ -496,6 +496,56 @@ namespace DatingApp.Tests.Controllers
         }
 
         [Fact]
+        public async Task UpdateUser_ReturnsBadRequest_WhenUpdateFailsV2()
+        {
+            // Arrange
+            var currentUsername = "testuser";
+
+            var mockHttpContext = new Mock<HttpContext>();
+            var mockClaimsPrincipal = new ClaimsPrincipal(
+                new ClaimsIdentity(new[]
+                {
+                    new Claim(ClaimTypes.Name, currentUsername)
+                }, "mock")
+            );
+            mockHttpContext.Setup(c => c.User).Returns(mockClaimsPrincipal);
+
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = mockHttpContext.Object
+            };
+
+            var appUser = new AppUser
+            {
+                UserName = currentUsername,
+                KnownAs = "Test",
+                        Gender = "Male",
+                        City = "TestCity",
+                        Country = "TestCountry"
+            };
+
+            _mockUnitOfWork.Setup(u => u.UserRepository.GetUserByUsernameAsync(currentUsername))
+                .ReturnsAsync(appUser);
+
+            // Ensure mapping is called (can be ignored in test)
+            var updateDto = new MemberUpdateDto { Introduction = "New intro" };
+
+            // Simulate failure
+            _mockUnitOfWork.Setup(u => u.Complete()).ReturnsAsync(false);
+
+            // Act
+            var result = await _controller.UpdateUser(updateDto);
+
+            // Assert
+            result.Should().BeOfType<BadRequestObjectResult>()
+                .Which.Value.Should().Be("Failed to update the user");
+
+            _mockUnitOfWork.Verify(u => u.UserRepository.GetUserByUsernameAsync(currentUsername), Times.Once);
+            _mockUnitOfWork.Verify(u => u.Complete(), Times.Once);
+        }
+
+
+        [Fact]
         public async Task UpdateUser_ReturnsNoContent_WhenUpdateIsSuccessfulV2()
         {
             // Arrange
