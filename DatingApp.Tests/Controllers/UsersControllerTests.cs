@@ -356,6 +356,45 @@ namespace DatingApp.Tests.Controllers
         }
 
         [Fact]
+        public async Task UpdateUser_ReturnsBadRequest_WhenUserNotFoundV2()
+        {
+            // Arrange
+            var currentUsername = "testuser";
+
+            var mockHttpContext = new Mock<HttpContext>();
+            var mockClaimsPrincipal = new ClaimsPrincipal(
+                new ClaimsIdentity(new[]
+                {
+                    new Claim(ClaimTypes.Name, currentUsername)
+                }, "mock")
+            );
+            mockHttpContext.Setup(c => c.User).Returns(mockClaimsPrincipal);
+
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = mockHttpContext.Object
+            };
+
+            _mockUnitOfWork.Setup(u => u.UserRepository.GetUserByUsernameAsync(currentUsername))
+                .ReturnsAsync((AppUser)null!);
+
+            var updateDto = new MemberUpdateDto
+            {
+                Introduction = "New intro"
+            };
+
+            // Act
+            var result = await _controller.UpdateUser(updateDto);
+
+            // Assert
+            result.Should().BeOfType<BadRequestObjectResult>()
+                .Which.Value.Should().Be("Could not find user");
+
+            _mockUnitOfWork.Verify(u => u.UserRepository.GetUserByUsernameAsync(currentUsername), Times.Once);
+            _mockUnitOfWork.Verify(u => u.Complete(), Times.Never);
+        }
+
+        [Fact]
         public async Task UpdateUser_ReturnsBadRequest_WhenSaveFails()
         {
             // Arrange
