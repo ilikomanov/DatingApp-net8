@@ -456,5 +456,73 @@ namespace DatingApp.Tests.Controllers
             // Assert
             result.Result.Should().BeOfType<BadRequestObjectResult>();
         }
+
+        [Fact]
+        public async Task AddPhoto_ReturnsCreatedAtAction_WhenSuccessful()
+        {
+            // Arrange
+            var mockFormFile = new Mock<IFormFile>();
+
+            var currentUsername = "testuser";
+            var mockHttpContext = new Mock<HttpContext>();
+            var mockClaimsPrincipal = new ClaimsPrincipal(
+                new ClaimsIdentity(new[]
+                {
+                    new Claim(ClaimTypes.Name, currentUsername)
+                }, "mock")
+            );
+
+            mockHttpContext.Setup(c => c.User).Returns(mockClaimsPrincipal);
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = mockHttpContext.Object
+            };
+
+            var appUser = new AppUser
+            {
+                UserName = "testuser",
+                KnownAs = "Test",
+                Gender = "Male",
+                City = "TestCity",
+                Country = "TestCountry",
+                Photos = new List<Photo>()
+            };
+
+            _mockUnitOfWork.Setup(u => u.UserRepository.GetUserByUsernameAsync(currentUsername))
+                .ReturnsAsync(appUser);
+
+            // Mock successful photo upload
+            _mockPhotoService.Setup(p => p.AddPhotoAsync(It.IsAny<IFormFile>()))
+                .ReturnsAsync(new ImageUploadResult
+                {
+                    SecureUrl = new Uri("http://test.com/photo.jpg"),
+                    PublicId = "public123"
+                });
+
+            _mockUnitOfWork.Setup(u => u.Complete()).ReturnsAsync(true);
+
+            // Mock mapper so PhotoDto is not null
+            _mockMapper.Setup(m => m.Map<PhotoDto>(It.IsAny<Photo>()))
+                .Returns((Photo p) => new PhotoDto
+                {
+                    Id = p.Id,
+                    Url = p.Url,
+                    IsMain = p.IsMain,
+                    IsApproved = p.IsApproved
+                });
+
+            // Act
+            var result = await _controller.AddPhoto(mockFormFile.Object);
+
+            // Assert
+            result.Result.Should().BeOfType<CreatedAtActionResult>();
+
+            var createdResult = result.Result as CreatedAtActionResult;
+            createdResult!.ActionName.Should().Be(nameof(_controller.GetUser));
+            createdResult.Value.Should().BeOfType<PhotoDto>();
+
+            var photoDto = createdResult.Value as PhotoDto;
+            photoDto!.Url.Should().Be("http://test.com/photo.jpg");
+        }
     }
 }
