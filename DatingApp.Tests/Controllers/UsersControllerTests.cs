@@ -278,6 +278,38 @@ namespace DatingApp.Tests.Controllers
             result.Value!.Username.Should().Be(requestedUsername);
         }
 
+        [Fact]
+        public async Task GetUser_CallsRepositoryWithIsCurrentUserFalse_WhenRequestingAnotherUser()
+        {
+            // Arrange
+            var currentUsername = "currentUser";
+            var requestedUsername = "otherUser";
+
+            var mockHttpContext = new Mock<HttpContext>();
+            var mockClaimsPrincipal = new ClaimsPrincipal(
+                new ClaimsIdentity(new[]
+                {
+                    new Claim(ClaimTypes.Name, currentUsername)
+                }, "mock")
+            );
+            mockHttpContext.Setup(c => c.User).Returns(mockClaimsPrincipal);
+
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = mockHttpContext.Object
+            };
+
+            var expectedMember = new MemberDto { Username = requestedUsername };
+            _mockUnitOfWork.Setup(u => u.UserRepository.GetMemberAsync(requestedUsername, false))
+                .ReturnsAsync(expectedMember);
+
+            // Act
+            var result = await _controller.GetUser(requestedUsername);
+
+            // Assert
+            result.Value.Should().Be(expectedMember);
+            _mockUnitOfWork.Verify(u => u.UserRepository.GetMemberAsync(requestedUsername, false), Times.Once);
+        }
 
         [Fact]
         public async Task UpdateUser_ReturnsNoContent_WhenUpdateIsSuccessful()
