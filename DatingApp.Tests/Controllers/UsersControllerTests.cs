@@ -751,6 +751,66 @@ namespace DatingApp.Tests.Controllers
         }
 
         [Fact]
+        public async Task AddPhoto_ReturnsCreatedAtRoute_WhenPhotoAddedSuccessfully()
+        {
+            // Arrange
+            var currentUsername = "testuser";
+            var mockHttpContext = new Mock<HttpContext>();
+            var mockClaimsPrincipal = new ClaimsPrincipal(
+                new ClaimsIdentity(new[]
+                {
+                    new Claim(ClaimTypes.Name, currentUsername)
+                }, "mock")
+            );
+            mockHttpContext.Setup(c => c.User).Returns(mockClaimsPrincipal);
+
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = mockHttpContext.Object
+            };
+
+            var appUser = new AppUser
+            {
+                UserName = currentUsername,
+                KnownAs = "Test",
+                Gender = "Male",
+                City = "TestCity",
+                Country = "TestCountry",
+                Photos = new List<Photo>()
+            };
+
+            _mockUnitOfWork.Setup(u => u.UserRepository.GetUserByUsernameAsync(currentUsername))
+                .ReturnsAsync(appUser);
+
+            var fileMock = new Mock<IFormFile>();
+
+            // Mock successful photo upload
+            _mockPhotoService.Setup(p => p.AddPhotoAsync(It.IsAny<IFormFile>()))
+                .ReturnsAsync(new ImageUploadResult
+                {
+                    SecureUrl = new Uri("http://photo.url"),
+                    PublicId = "public123"
+                });
+
+            _mockUnitOfWork.Setup(u => u.Complete()).ReturnsAsync(true);
+
+            // Act
+            var result = await _controller.AddPhoto(fileMock.Object);
+
+            // Assert
+            var createdAtActionResult = result.Result as CreatedAtActionResult;
+            createdAtActionResult.Should().NotBeNull();
+            createdAtActionResult.ActionName.Should().Be(nameof(_controller.GetUser));
+            createdAtActionResult.RouteValues["username"].Should().Be(currentUsername);
+
+            appUser.Photos.Should().ContainSingle();
+            appUser.Photos.First().Url.Should().Be("http://photo.url/"); // matches mocked SecureUrl
+
+            _mockUnitOfWork.Verify(u => u.Complete(), Times.Once);
+            _mockPhotoService.Verify(s => s.AddPhotoAsync(fileMock.Object), Times.Once);
+        }
+        
+        [Fact]
         public async Task AddPhoto_ReturnsBadRequest_WhenUnitOfWorkFails()
         {
             // Arrange
