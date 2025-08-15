@@ -73,25 +73,7 @@ namespace DatingApp.Tests.Controllers
             returnValue.Should().HaveCount(1);
         }
 
-        [Fact]
-        public async Task GetUser_ReturnsMemberDto_WhenUserExists()
-        {
-            // Arange
-            var username = "testuser";
-            var member = new MemberDto { Username = username };
-
-            _mockUnitOfWork.Setup(u => u.UserRepository.GetMemberAsync(username, true))
-                .ReturnsAsync(member);
-
-            // Act
-            var result = await _controller.GetUser(username);
-
-            // Assert
-            result.Value.Should().NotBeNull();
-            result.Value.Username.Should().Be(username);
-        }
-
-        [Fact]
+         [Fact]
         public async Task GetUsers_ReturnsEmptyList_WhenNoUsersFound()
         {
             // Arrange
@@ -140,6 +122,52 @@ namespace DatingApp.Tests.Controllers
         }
 
         [Fact]
+        public async Task GetUser_ReturnsMemberDto_WhenUserExists()
+        {
+            // Arange
+            var username = "testuser";
+            var member = new MemberDto { Username = username };
+
+            _mockUnitOfWork.Setup(u => u.UserRepository.GetMemberAsync(username, true))
+                .ReturnsAsync(member);
+
+            // Act
+            var result = await _controller.GetUser(username);
+
+            // Assert
+            result.Value.Should().NotBeNull();
+            result.Value.Username.Should().Be(username);
+        }
+
+        [Fact]
+        public async Task GetUser_ReturnsNull_WhenUserDoesNotExist()
+        {
+            // Arrange
+            var username = "nonexistent";
+            var mockHttpContext = new Mock<HttpContext>();
+            var mockClaimsPrincipal = new ClaimsPrincipal(
+                new ClaimsIdentity(new[]
+                {
+                    new Claim(ClaimTypes.Name, "currentUser")
+                }, "mock")
+            );
+            mockHttpContext.Setup(c => c.User).Returns(mockClaimsPrincipal);
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = mockHttpContext.Object
+            };
+
+            _mockUnitOfWork.Setup(u => u.UserRepository.GetMemberAsync(username, false))
+                .ReturnsAsync((MemberDto)null!);
+
+            // Act
+            var result = await _controller.GetUser(username);
+
+            // Assert
+            result.Value.Should().BeNull();
+        }
+
+        [Fact]
         public async Task GetUser_ReturnsNotFound_WhenUserDoesNotExist()
         {
             // Arrange
@@ -185,6 +213,35 @@ namespace DatingApp.Tests.Controllers
             // Assert
             result.Value.Should().NotBeNull();
             result.Value!.Username.Should().Be(username);
+        }
+
+        [Fact]
+        public async Task GetUser_CallsRepositoryWithIsCurrentUserTrue_WhenRequestingSelf()
+        {
+            // Arrange
+            var username = "currentUser";
+            var mockHttpContext = new Mock<HttpContext>();
+            var mockClaimsPrincipal = new ClaimsPrincipal(
+                new ClaimsIdentity(new[]
+                {
+                    new Claim(ClaimTypes.Name, username)
+                }, "mock")
+            );
+            mockHttpContext.Setup(c => c.User).Returns(mockClaimsPrincipal);
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = mockHttpContext.Object
+            };
+
+            var expectedMember = new MemberDto { Username = username };
+            _mockUnitOfWork.Setup(u => u.UserRepository.GetMemberAsync(username, true))
+                .ReturnsAsync(expectedMember);
+
+            // Act
+            var result = await _controller.GetUser(username);
+
+            // Assert
+            result.Value.Should().Be(expectedMember);
         }
 
         [Fact]
