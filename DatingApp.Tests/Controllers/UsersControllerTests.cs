@@ -588,6 +588,63 @@ namespace DatingApp.Tests.Controllers
         }
 
         [Fact]
+        public async Task UpdateUser_ReturnsBadRequest_WhenUpdateFailsV3()
+        {
+            // Arrange
+            var username = "testuser";
+            var updateDto = new MemberUpdateDto
+            {
+                Introduction = "Hello world",
+                LookingFor = "Friendship",
+                Interests = "Coding, Reading",
+                City = "TestCity",
+                Country = "TestCountry"
+            };
+
+            var appUser = new AppUser
+            {
+                UserName = username,
+                Introduction = "Old intro",
+                LookingFor = "Old looking for",
+                Interests = "Old interests",
+                City = "OldCity",
+                Country = "OldCountry",
+                KnownAs = "Old Test",
+                Gender = "Male"
+            };
+
+            _mockUnitOfWork.Setup(u => u.UserRepository.GetUserByUsernameAsync(username))
+                .ReturnsAsync(appUser);
+
+            _mockUnitOfWork.Setup(u => u.Complete())
+                .ReturnsAsync(false); // Simulate failure
+
+            var mockHttpContext = new Mock<HttpContext>();
+            var mockClaimsPrincipal = new ClaimsPrincipal(
+                new ClaimsIdentity(new[]
+                {
+                    new Claim(ClaimTypes.Name, username)
+                }, "mock")
+            );
+            mockHttpContext.Setup(c => c.User).Returns(mockClaimsPrincipal);
+
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = mockHttpContext.Object
+            };
+
+            // Act
+            var result = await _controller.UpdateUser(updateDto);
+
+            // Assert
+            result.Should().BeOfType<BadRequestObjectResult>();
+            var badRequest = result as BadRequestObjectResult;
+            badRequest!.Value.Should().Be("Failed to update the user");
+
+            _mockUnitOfWork.Verify(u => u.Complete(), Times.Once); // Complete was called
+        }
+
+        [Fact]
         public async Task UpdateUser_ReturnsNoContent_WhenUpdateIsSuccessfulV2()
         {
             // Arrange
