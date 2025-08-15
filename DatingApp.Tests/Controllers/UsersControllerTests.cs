@@ -74,7 +74,7 @@ namespace DatingApp.Tests.Controllers
             returnValue.Should().HaveCount(1);
         }
 
-         [Fact]
+        [Fact]
         public async Task GetUsers_ReturnsEmptyList_WhenNoUsersFound()
         {
             // Arrange
@@ -775,9 +775,9 @@ namespace DatingApp.Tests.Controllers
             {
                 UserName = currentUsername,
                 KnownAs = "Test",
-                        Gender = "Male",
-                        City = "TestCity",
-                        Country = "TestCountry"
+                Gender = "Male",
+                City = "TestCity",
+                Country = "TestCountry"
             };
 
             _mockUnitOfWork.Setup(u => u.UserRepository.GetUserByUsernameAsync(currentUsername))
@@ -975,7 +975,7 @@ namespace DatingApp.Tests.Controllers
             _mockUnitOfWork.Verify(u => u.Complete(), Times.Once);
             _mockPhotoService.Verify(s => s.AddPhotoAsync(fileMock.Object), Times.Once);
         }
-        
+
         [Fact]
         public async Task AddPhoto_ReturnsBadRequest_WhenUnitOfWorkFails()
         {
@@ -1053,11 +1053,11 @@ namespace DatingApp.Tests.Controllers
             var appUser = new AppUser
             {
                 UserName = "testuser",
-                        KnownAs = "Test",
-                        Gender = "Male",
-                        City = "TestCity",
-                        Country = "TestCountry",
-                        Photos = new List<Photo>()
+                KnownAs = "Test",
+                Gender = "Male",
+                City = "TestCity",
+                Country = "TestCountry",
+                Photos = new List<Photo>()
             };
 
             _mockUnitOfWork.Setup(u => u.UserRepository.GetUserByUsernameAsync(currentUsername))
@@ -1077,6 +1077,68 @@ namespace DatingApp.Tests.Controllers
             result.Result.Should().BeOfType<BadRequestObjectResult>();
             var badRequest = result.Result as BadRequestObjectResult;
             badRequest!.Value.Should().Be("Upload failed");
+        }
+
+        [Fact]
+        public async Task DeletePhoto_ReturnsNoContent_WhenPhotoDeletedSuccessfully()
+        {
+            // Arrange
+            var username = "testuser";
+            var photoId = 1;
+
+            var appUser = new AppUser
+            {
+                UserName = username,
+                KnownAs = "Test",
+                Gender = "Male",
+                City = "TestCity",
+                Country = "TestCountry",
+                Photos = new List<Photo>
+                {
+                    new Photo
+                    {
+                        Id = photoId,
+                        Url = "http://photo.url",
+                        IsMain = false,
+                        PublicId = "publicId123"
+                    }
+                }
+            };
+
+            _mockUnitOfWork.Setup(u => u.UserRepository.GetUserByUsernameAsync(username))
+                .ReturnsAsync(appUser);
+
+            // **Important**: mock GetPhotoById to avoid NullReferenceException
+            _mockUnitOfWork.Setup(u => u.PhotoRepository.GetPhotoById(photoId))
+                .ReturnsAsync(appUser.Photos.First());
+
+            _mockPhotoService.Setup(p => p.DeletePhotoAsync("publicId123"))
+                .ReturnsAsync(new DeletionResult { Result = "ok" });
+
+            _mockUnitOfWork.Setup(u => u.Complete())
+                .ReturnsAsync(true);
+
+            var mockHttpContext = new Mock<HttpContext>();
+            var mockClaimsPrincipal = new ClaimsPrincipal(
+                new ClaimsIdentity(new[]
+                {
+                    new Claim(ClaimTypes.Name, username)
+                }, "mock")
+            );
+            mockHttpContext.Setup(c => c.User).Returns(mockClaimsPrincipal);
+
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = mockHttpContext.Object
+            };
+
+            // Act
+            var result = await _controller.DeletePhoto(photoId);
+
+            // Assert
+            result.Should().BeOfType<OkResult>();
+            appUser.Photos.Should().BeEmpty();
+            _mockUnitOfWork.Verify(u => u.Complete(), Times.Once);
         }
     }
 }
