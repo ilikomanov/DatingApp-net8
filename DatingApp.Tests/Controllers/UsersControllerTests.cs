@@ -14,6 +14,7 @@ using Moq;
 using Xunit;
 using CloudinaryDotNet.Actions;
 
+
 namespace DatingApp.Tests.Controllers
 {
     public class UsersControllerTests
@@ -21,7 +22,7 @@ namespace DatingApp.Tests.Controllers
         private readonly Mock<IUnitOfWork> _mockUnitOfWork;
         private readonly Mock<IMapper> _mockMapper;
         private readonly Mock<IPhotoService> _mockPhotoService;
-        private readonly UsersController _controller;
+        private UsersController _controller;
 
         public UsersControllerTests()
         {
@@ -519,9 +520,9 @@ namespace DatingApp.Tests.Controllers
             {
                 UserName = currentUsername,
                 KnownAs = "Test",
-                        Gender = "Male",
-                        City = "TestCity",
-                        Country = "TestCountry"
+                Gender = "Male",
+                City = "TestCity",
+                Country = "TestCountry"
             };
 
             _mockUnitOfWork.Setup(u => u.UserRepository.GetUserByUsernameAsync(currentUsername))
@@ -543,7 +544,6 @@ namespace DatingApp.Tests.Controllers
             _mockUnitOfWork.Verify(u => u.UserRepository.GetUserByUsernameAsync(currentUsername), Times.Once);
             _mockUnitOfWork.Verify(u => u.Complete(), Times.Once);
         }
-
 
         [Fact]
         public async Task UpdateUser_ReturnsNoContent_WhenUpdateIsSuccessfulV2()
@@ -583,6 +583,73 @@ namespace DatingApp.Tests.Controllers
 
             // Assert
             result.Should().BeOfType<NoContentResult>();
+        }
+
+        [Fact]
+        public async Task UpdateUser_ReturnsNoContent_WhenUpdateIsSuccessfulV3()
+        {
+            // Arrange
+            var config = new MapperConfiguration(cfg =>
+            {
+                cfg.CreateMap<MemberUpdateDto, AppUser>();
+            });
+            var mapper = config.CreateMapper();
+
+            var username = "testuser";
+            var updateDto = new MemberUpdateDto
+            {
+                Introduction = "Hello world",
+                LookingFor = "Friendship",
+                Interests = "Coding, Reading",
+                City = "TestCity",
+                Country = "TestCountry"
+            };
+
+            var appUser = new AppUser
+            {
+                UserName = username,
+                Introduction = "Old intro",
+                LookingFor = "Old looking for",
+                Interests = "Old interests",
+                City = "OldCity",
+                Country = "OldCountry",
+                KnownAs = "Old Test",
+                Gender = "Male",
+            };
+
+            _mockUnitOfWork.Setup(u => u.UserRepository.GetUserByUsernameAsync(username))
+                .ReturnsAsync(appUser);
+
+            _mockUnitOfWork.Setup(u => u.Complete())
+                .ReturnsAsync(true);
+
+            var mockHttpContext = new Mock<HttpContext>();
+            var mockClaimsPrincipal = new ClaimsPrincipal(
+                new ClaimsIdentity(new[]
+                {
+                    new Claim(ClaimTypes.Name, username)
+                }, "mock")
+            );
+            mockHttpContext.Setup(c => c.User).Returns(mockClaimsPrincipal);
+
+            _controller = new UsersController(_mockUnitOfWork.Object, mapper, _mockPhotoService.Object);
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = mockHttpContext.Object
+            };
+
+            // Act
+            var result = await _controller.UpdateUser(updateDto);
+
+            // Assert
+            result.Should().BeOfType<NoContentResult>();
+            appUser.Introduction.Should().Be(updateDto.Introduction);
+            appUser.LookingFor.Should().Be(updateDto.LookingFor);
+            appUser.Interests.Should().Be(updateDto.Interests);
+            appUser.City.Should().Be(updateDto.City);
+            appUser.Country.Should().Be(updateDto.Country);
+
+            _mockUnitOfWork.Verify(u => u.Complete(), Times.Once);
         }
 
         [Fact]
