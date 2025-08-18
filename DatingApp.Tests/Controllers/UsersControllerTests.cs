@@ -1142,6 +1142,56 @@ namespace DatingApp.Tests.Controllers
         }
 
         [Fact]
+        public async Task AddPhoto_ReturnsBadRequest_WhenPhotoServiceFailsV3()
+        {
+            // Arrange
+            var username = "testuser";
+            var fileMock = new Mock<IFormFile>();
+
+            var appUser = new AppUser
+            {
+                UserName = username,
+                KnownAs = "Test",
+                Gender = "Male",
+                City = "TestCity",
+                Country = "TestCountry",
+                Photos = new List<Photo>()
+            };
+
+            // Simulate logged-in user
+            var httpContext = new DefaultHttpContext
+            {
+                User = new ClaimsPrincipal(new ClaimsIdentity(
+                    new[] { new Claim(ClaimTypes.Name, username) }, "mock"))
+            };
+            _controller.ControllerContext = new ControllerContext { HttpContext = httpContext };
+
+            _mockUnitOfWork.Setup(u => u.UserRepository.GetUserByUsernameAsync(username))
+                .ReturnsAsync(appUser);
+
+            // Mock photo service failure
+            var uploadResult = new ImageUploadResult
+            {
+                Error = new Error { Message = "Upload failed" }
+            };
+
+            _mockPhotoService.Setup(p => p.AddPhotoAsync(It.IsAny<IFormFile>()))
+                .ReturnsAsync(uploadResult);
+
+            // Act
+            var result = await _controller.AddPhoto(fileMock.Object);
+
+            // Assert
+            result.Result.Should().BeOfType<BadRequestObjectResult>();
+            var badRequest = (BadRequestObjectResult)result.Result!;
+            badRequest.Value.Should().Be("Upload failed");
+
+            // Photo should not be added
+            appUser.Photos.Should().BeEmpty();
+            _mockUnitOfWork.Verify(u => u.Complete(), Times.Never);
+        }
+
+        [Fact]
         public async Task AddPhoto_ReturnsBadRequest_WhenUserNotFound()
         {
             // Arrange
