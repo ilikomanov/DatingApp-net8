@@ -1142,6 +1142,37 @@ namespace DatingApp.Tests.Controllers
         }
 
         [Fact]
+        public async Task AddPhoto_ReturnsBadRequest_WhenUserNotFound()
+        {
+            // Arrange
+            var username = "testuser";
+            var fileMock = new Mock<IFormFile>();
+
+            // Simulate logged-in user
+            var httpContext = new DefaultHttpContext
+            {
+                User = new ClaimsPrincipal(new ClaimsIdentity(
+                    new[] { new Claim(ClaimTypes.Name, username) }, "mock"))
+            };
+            _controller.ControllerContext = new ControllerContext { HttpContext = httpContext };
+
+            // User repo returns null -> user not found
+            _mockUnitOfWork.Setup(u => u.UserRepository.GetUserByUsernameAsync(username))
+                .ReturnsAsync((AppUser?)null);
+
+            // Act
+            var result = await _controller.AddPhoto(fileMock.Object);
+
+            // Assert
+            result.Result.Should().BeOfType<BadRequestObjectResult>();
+            var badRequest = (BadRequestObjectResult)result.Result!;
+            badRequest.Value.Should().Be("Cannot update user");
+
+            // Photo service should not be called
+            _mockPhotoService.Verify(p => p.AddPhotoAsync(It.IsAny<IFormFile>()), Times.Never);
+        }
+
+        [Fact]
         public async Task DeletePhoto_ReturnsNoContent_WhenPhotoDeletedSuccessfully()
         {
             // Arrange
