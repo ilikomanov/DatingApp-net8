@@ -67,7 +67,7 @@ namespace DatingApp.Tests.Controllers
             _mockMapper.Setup(m => m.Map<AppUser>(It.IsAny<RegisterDto>()))
                 .Returns(appUser);
 
-            // ✅ Use helper to mock async-enabled DbSet<AppUser>
+            // Use helper to mock async-enabled DbSet<AppUser>
             var users = new List<AppUser>(); // empty list, adjust if needed
             var mockUserDbSet = MockDbSetHelper.CreateMockDbSet(users);
 
