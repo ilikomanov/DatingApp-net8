@@ -1260,6 +1260,60 @@ namespace DatingApp.Tests.Controllers
         }
 
         [Fact]
+        public async Task AddPhoto_ReturnsBadRequest_WhenCompleteFails()
+        {
+            // Arrange
+            var username = "testuser";
+            var appUser = new AppUser
+            {
+                UserName = username,
+                KnownAs = "Test",
+                Gender = "Male",
+                City = "TestCity",
+                Country = "TestCountry",
+                Photos = new List<Photo>()
+            };
+
+            _mockUnitOfWork.Setup(u => u.UserRepository.GetUserByUsernameAsync(username))
+                .ReturnsAsync(appUser);
+
+            var mockHttpContext = new Mock<HttpContext>();
+            var mockClaimsPrincipal = new ClaimsPrincipal(
+                new ClaimsIdentity(new[]
+                {
+                    new Claim(ClaimTypes.Name, username)
+                }, "mock")
+            );
+            mockHttpContext.Setup(c => c.User).Returns(mockClaimsPrincipal);
+
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = mockHttpContext.Object
+            };
+
+            var fileMock = new Mock<IFormFile>();
+
+            _mockPhotoService.Setup(p => p.AddPhotoAsync(It.IsAny<IFormFile>()))
+                .ReturnsAsync(new ImageUploadResult
+                {
+                    SecureUrl = new Uri("http://photo.url"),
+                    PublicId = "publicId123"
+                });
+
+            _mockUnitOfWork.Setup(u => u.Complete()).ReturnsAsync(false); // simulate failure
+
+            // Act
+            var result = await _controller.AddPhoto(fileMock.Object);
+
+            // Assert
+            result.Result.Should().BeOfType<BadRequestObjectResult>();
+            var badRequest = result.Result as BadRequestObjectResult;
+            badRequest!.Value.Should().Be("Problem adding photo");
+
+            _mockUnitOfWork.Verify(u => u.Complete(), Times.Once);
+        }
+
+        [Fact]
         public async Task DeletePhoto_ReturnsNoContent_WhenPhotoDeletedSuccessfully()
         {
             // Arrange
