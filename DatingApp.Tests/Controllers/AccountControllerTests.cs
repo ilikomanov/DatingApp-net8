@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 using Moq;
 using Xunit;
 using DatingApp.Tests.Helpers;
+using Microsoft.AspNetCore.Mvc;
 
 namespace DatingApp.Tests.Controllers
 {
@@ -89,6 +90,53 @@ namespace DatingApp.Tests.Controllers
             result.Value.Should().NotBeNull();
             result.Value.Username.Should().Be("newuser");
             result.Value.Token.Should().Be("fake-token");
+        }
+
+        [Fact]
+        public async Task Register_ReturnsBadRequest_WhenUserAlreadyExists()
+        {
+            // Arrange
+            var registerDto = new RegisterDto
+            {
+                Username = "existinguser",
+                Password = "Pa$$w0rd"
+            };
+
+            var existingUser = new AppUser
+            {
+                UserName = "existinguser",
+                KnownAs = "Test",
+                        Gender = "Male",
+                        City = "TestCity",
+                        Country = "TestCountry"
+            };
+
+            var users = new List<AppUser> { existingUser };
+            var mockUserDbSet = MockDbSetHelper.CreateMockDbSet(users);
+
+            _mockUserManager.Setup(um => um.Users).Returns(mockUserDbSet.Object);
+
+            _mockMapper.Setup(m => m.Map<AppUser>(It.IsAny<RegisterDto>()))
+                .Returns(new AppUser { UserName = registerDto.Username, KnownAs = "Test",
+                        Gender = "Male",
+                        City = "TestCity",
+                        Country = "TestCountry" });
+
+            // Mock CreateAsync so it returns a failed result
+            _mockUserManager
+                .Setup(um => um.CreateAsync(It.IsAny<AppUser>(), It.IsAny<string>()))
+                .ReturnsAsync(IdentityResult.Failed(new IdentityError { Description = "Username taken" }));
+
+            // Act
+            var actionResult = await _controller.Register(registerDto);
+
+            // Assert
+        actionResult.Result.Should().BeOfType<BadRequestObjectResult>();
+        var badRequest = actionResult.Result as BadRequestObjectResult;
+
+        badRequest!.Value.Should().BeEquivalentTo(
+            new IdentityError[] { new IdentityError { Description = "Username taken" } }
+            );
         }
     }
 }
