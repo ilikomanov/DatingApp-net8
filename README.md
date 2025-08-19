@@ -12,6 +12,8 @@
 
 ### 📊 Language Usage in `DatingApp-net8`
 
+![Language Usage Bar](./client/src/assets/language_bar_with_labels1.png)
+
 - 🟢 **C#** – 64.5%
 - 🔵 **TypeScript** – 21.8%
 - 🔴 **HTML** – 12.3%
