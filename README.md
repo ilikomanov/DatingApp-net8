@@ -12,14 +12,11 @@
 
 ### 📊 Language Usage in `DatingApp-net8`
 
-![Language Usage Bar](./client/src/assets/language_bar_with_labels1.png)
-
-- 🟢 **C#** – 63.3%
-- 🔵 **TypeScript** – 22.5%
-- 🔴 **HTML** – 12.7%
-- 🟠 **CSS** – 1.3%
-- 🟡 **Dockerfile** – 0.2%
-
+- 🟢 **C#** – 64.5%
+- 🔵 **TypeScript** – 21.8%
+- 🔴 **HTML** – 12.3%
+- 🟠 **CSS** – 1.2%
+- 🟡 **Dockerfile** – 0.1%
 ---
 
 ## 🧪 Here are some of the technologies used to develop the application:
