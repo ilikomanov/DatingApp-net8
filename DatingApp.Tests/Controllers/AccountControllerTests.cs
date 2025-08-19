@@ -12,6 +12,7 @@ using Moq;
 using Xunit;
 using DatingApp.Tests.Helpers;
 using Microsoft.AspNetCore.Mvc;
+using MockQueryable.Moq;
 
 namespace DatingApp.Tests.Controllers
 {
@@ -93,50 +94,71 @@ namespace DatingApp.Tests.Controllers
         }
 
         [Fact]
-        public async Task Register_ReturnsBadRequest_WhenUserAlreadyExists()
+        public async Task Login_ReturnsUserDto_WhenLoginSuccessful()
         {
             // Arrange
-            var registerDto = new RegisterDto
+            var testUser = new AppUser
             {
-                Username = "existinguser",
-                Password = "Pa$$w0rd"
+                Id = 1,
+                UserName = "testuser",
+                NormalizedUserName = "TESTUSER",
+                KnownAs = "Tester",
+                Gender = "male",
+                City = "TestCity",
+                Country = "TestCountry",
+                Photos = new List<Photo>
+        {
+            new Photo { Id = 1, Url = "http://test.com/photo.jpg", IsMain = true }
+        }
             };
 
-            var existingUser = new AppUser
+            var users = new List<AppUser> { testUser }.AsQueryable().BuildMock();
+
+            var mockUserManager = MockUserManager();
+            mockUserManager.Setup(u => u.Users).Returns(users);
+            mockUserManager.Setup(u => u.CheckPasswordAsync(testUser, "password"))
+                           .ReturnsAsync(true);
+
+            var mockTokenService = new Mock<ITokenService>();
+            mockTokenService.Setup(t => t.CreateToken(testUser))
+                            .ReturnsAsync("fake-jwt-token");
+
+            var mockMapper = new Mock<IMapper>();
+            // not really needed here since controller builds UserDto manually,
+            // but constructor requires it
+            mockMapper.Setup(m => m.Map<UserDto>(It.IsAny<AppUser>()))
+                      .Returns(new UserDto
+                      {
+                          Username = testUser.UserName,
+                          KnownAs = testUser.KnownAs,
+                          Gender = testUser.Gender,
+                          Token = "token"
+                      });
+
+            var controller = new AccountController(
+                mockUserManager.Object,
+                mockTokenService.Object,
+                mockMapper.Object
+            );
+
+            var loginDto = new LoginDto
             {
-                UserName = "existinguser",
-                KnownAs = "Test",
-                        Gender = "Male",
-                        City = "TestCity",
-                        Country = "TestCountry"
+                Username = "testuser",
+                Password = "password"
             };
-
-            var users = new List<AppUser> { existingUser };
-            var mockUserDbSet = MockDbSetHelper.CreateMockDbSet(users);
-
-            _mockUserManager.Setup(um => um.Users).Returns(mockUserDbSet.Object);
-
-            _mockMapper.Setup(m => m.Map<AppUser>(It.IsAny<RegisterDto>()))
-                .Returns(new AppUser { UserName = registerDto.Username, KnownAs = "Test",
-                        Gender = "Male",
-                        City = "TestCity",
-                        Country = "TestCountry" });
-
-            // Mock CreateAsync so it returns a failed result
-            _mockUserManager
-                .Setup(um => um.CreateAsync(It.IsAny<AppUser>(), It.IsAny<string>()))
-                .ReturnsAsync(IdentityResult.Failed(new IdentityError { Description = "Username taken" }));
 
             // Act
-            var actionResult = await _controller.Register(registerDto);
+            var result = await controller.Login(loginDto);
 
             // Assert
-        actionResult.Result.Should().BeOfType<BadRequestObjectResult>();
-        var badRequest = actionResult.Result as BadRequestObjectResult;
+            var actionResult = Assert.IsType<ActionResult<UserDto>>(result);
+            var userDto = Assert.IsType<UserDto>(actionResult.Value);
 
-        badRequest!.Value.Should().BeEquivalentTo(
-            new IdentityError[] { new IdentityError { Description = "Username taken" } }
-            );
+            Assert.Equal("testuser", userDto.Username);
+            Assert.Equal("Tester", userDto.KnownAs);
+            Assert.Equal("male", userDto.Gender);
+            Assert.Equal("http://test.com/photo.jpg", userDto.PhotoUrl);
+            Assert.Equal("fake-jwt-token", userDto.Token);
         }
     }
 }
