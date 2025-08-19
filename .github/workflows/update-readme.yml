@@ -2,15 +2,15 @@ name: Update README with Language Stats
 
 on:
   schedule:
-    - cron: '0 0 * * 0' # Runs every Sunday
-  workflow_dispatch: # Allow manual trigger
+    - cron: '0 0 * * 0'  # Runs every Sunday at midnight
+  workflow_dispatch:      # Allows manual run from the GitHub UI
 
 jobs:
   update-readme:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v3
 
       - name: Setup Node.js
@@ -18,15 +18,19 @@ jobs:
         with:
           node-version: '18'
 
-      - name: Run update script
-        run: |
-          npm install axios
-          node .github/scripts/updateReadme.js
+      - name: Install dependencies
+        run: npm install axios
+
+      - name: Run script to update README
+        run: node .github/scripts/updateReadme.js
 
       - name: Commit and push changes
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
           git config --global user.name 'github-actions'
           git config --global user.email 'github-actions@github.com'
+          git remote set-url origin https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}
           git add README.md
-          git commit -m "Update README with latest language stats"
+          git diff --cached --quiet || git commit -m "Update README with latest language stats"
           git push
