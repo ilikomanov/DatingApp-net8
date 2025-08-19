@@ -19,7 +19,9 @@ jobs:
           node-version: '18'
 
       - name: Install axios (dependency)
-        run: npm install axios
+        run: |
+          npm init -y
+          npm install axios
 
       - name: Run script to update README
         run: node .github/scripts/updateReadme.js
@@ -31,13 +33,10 @@ jobs:
           git config --global user.name 'github-actions'
           git config --global user.email 'github-actions@github.com'
 
-          # Set authenticated remote using your PAT
           git remote set-url origin https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}
 
           git add README.md
 
-          # Only commit if there are changes
           git diff --cached --quiet || git commit -m "Update README with latest language stats"
 
-          # Push to the main branch (change 'main' if needed)
           git push origin HEAD:main
