@@ -215,5 +215,32 @@ namespace DatingApp.Tests.Controllers
             // Assert
             Assert.IsType<UnauthorizedResult>(result.Result);
         }
+
+        [Fact]
+        public async Task Login_ReturnsUnauthorized_WhenUserDoesNotExist()
+        {
+            // Arrange
+            var loginDto = new LoginDto { Username = "Ghost", Password = "DoesNotMatter" };
+
+            // Mock store & UserManager
+            var store = new Mock<IUserStore<AppUser>>();
+            var mockUserManager = MockUserManager(new List<AppUser>(), store); // empty user list
+
+            var mockTokenService = new Mock<ITokenService>();
+            var mockMapper = new Mock<IMapper>();
+
+            var controller = new AccountController(
+                mockUserManager.Object,
+                mockTokenService.Object,
+                mockMapper.Object
+            );
+
+            // Act
+            var result = await controller.Login(loginDto);
+
+            // Assert
+            var unauthorizedResult = Assert.IsType<UnauthorizedObjectResult>(result.Result);
+            Assert.Equal("Invalid username", unauthorizedResult.Value);
+        }
     }
 }
