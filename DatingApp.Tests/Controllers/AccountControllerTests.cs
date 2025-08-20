@@ -13,6 +13,7 @@ using Xunit;
 using DatingApp.Tests.Helpers;
 using Microsoft.AspNetCore.Mvc;
 using MockQueryable.Moq;
+using System.Linq;
 
 namespace DatingApp.Tests.Controllers
 {
@@ -104,6 +105,59 @@ namespace DatingApp.Tests.Controllers
             result.Value.Username.Should().Be("newuser");
             result.Value.Token.Should().Be("fake-token");
         }
+
+        [Fact]
+        public async Task Register_ReturnsBadRequest_WhenUserAlreadyExists()
+        {
+            // Arrange
+            var registerDto = new RegisterDto
+            {
+                Username = "existinguser",
+                Password = "Pa$$w0rd"
+            };
+
+            var existingUser = new AppUser
+            {
+                UserName = "existinguser",
+                KnownAs = "Test",
+                Gender = "Male",
+                City = "TestCity",
+                Country = "TestCountry",
+                Photos = new List<Photo>()
+            };
+
+            // Mock mapper: RegisterDto -> AppUser (can be same object)
+            _mockMapper.Setup(m => m.Map<AppUser>(It.IsAny<RegisterDto>()))
+                .Returns(new AppUser
+                {
+                    KnownAs = "Test",
+                    UserName = "placeholder",
+                    Gender = "Male",
+                    City = "TestCity",
+                    Country = "TestCountry"
+                });
+
+            // Mock Users DbSet with one existing user
+            var users = new List<AppUser> { existingUser };
+            var mockUserDbSet = MockDbSetHelper.CreateMockDbSet(users);
+
+            _mockUserManager.Setup(um => um.Users).Returns(mockUserDbSet.Object);
+
+            // Mock CreateAsync just in case it's called (won't be for this test)
+            _mockUserManager.Setup(um => um.CreateAsync(It.IsAny<AppUser>(), It.IsAny<string>()))
+                .ReturnsAsync(IdentityResult.Success);
+
+            // Act
+            var result = await _controller.Register(registerDto);
+
+            // Assert
+            result.Result.Should().BeOfType<BadRequestObjectResult>();
+            var badRequest = result.Result as BadRequestObjectResult;
+            badRequest.Value.Should().Be("Username is taken");
+        }
+
+
+
 
         [Fact]
         public async Task Login_ReturnsUserDto_WhenLoginSuccessful()
