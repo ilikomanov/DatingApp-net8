@@ -45,6 +45,18 @@ namespace DatingApp.Tests.Controllers
             );
         }
 
+        private static Mock<UserManager<AppUser>> MockUserManager(List<AppUser> users, Mock<IUserStore<AppUser>> store)
+        {
+            var mockUserManager = new Mock<UserManager<AppUser>>(
+                store.Object, null, null, null, null, null, null, null, null
+            );
+
+            // Setup the IQueryable users collection
+            mockUserManager.Setup(u => u.Users).Returns(users.AsQueryable().BuildMock());
+
+            return mockUserManager;
+        }
+
         [Fact]
         public async Task Register_ReturnsUserDto_WhenRegistrationSuccessful()
         {
@@ -159,6 +171,49 @@ namespace DatingApp.Tests.Controllers
             Assert.Equal("male", userDto.Gender);
             Assert.Equal("http://test.com/photo.jpg", userDto.PhotoUrl);
             Assert.Equal("fake-jwt-token", userDto.Token);
+        }
+
+        [Fact]
+        public async Task Login_ReturnsUnauthorized_WhenPasswordIsWrong()
+        {
+            // Arrange
+            var loginDto = new LoginDto
+            {
+                Username = "testuser",
+                Password = "wrongpassword"
+            };
+
+            var user = new AppUser
+            {
+                UserName = "testuser",
+                NormalizedUserName = "TESTUSER",
+
+
+                City = "TestCity",
+                Country = "TestCountry",
+                Photos = new List<Photo> { new Photo { Url = "http://test.com/photo.jpg", IsMain = true } },
+                KnownAs = "Tester",
+                Gender = "male"
+            };
+
+            // Mock UserManager
+            var mockUserStore = new Mock<IUserStore<AppUser>>();
+            var mockUserManager = MockUserManager(new List<AppUser> { user }, mockUserStore);
+
+            // Force CheckPasswordAsync to return false (wrong password)
+            mockUserManager.Setup(um => um.CheckPasswordAsync(It.IsAny<AppUser>(), It.IsAny<string>()))
+                           .ReturnsAsync(false);
+
+            var mockTokenService = new Mock<ITokenService>();
+            var mockMapper = new Mock<IMapper>();
+
+            var controller = new AccountController(mockUserManager.Object, mockTokenService.Object, mockMapper.Object);
+
+            // Act
+            var result = await controller.Login(loginDto);
+
+            // Assert
+            Assert.IsType<UnauthorizedResult>(result.Result);
         }
     }
 }
