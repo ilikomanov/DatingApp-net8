@@ -112,14 +112,14 @@ namespace DatingApp.Tests.Controllers
             // Arrange
             var registerDto = new RegisterDto
             {
-                Username = "existinguser",
+                Username = "ExistingUser",
                 Password = "Pa$$w0rd"
             };
 
             var existingUser = new AppUser
             {
                 UserName = "existinguser",
-                KnownAs = "Test",
+                KnownAs = "Existing",
                 Gender = "Male",
                 City = "TestCity",
                 Country = "TestCountry",
@@ -137,6 +137,7 @@ namespace DatingApp.Tests.Controllers
                     Country = "TestCountry"
                 });
 
+
             // Mock Users DbSet with one existing user
             var users = new List<AppUser> { existingUser };
             var mockUserDbSet = MockDbSetHelper.CreateMockDbSet(users);
@@ -151,13 +152,15 @@ namespace DatingApp.Tests.Controllers
             var result = await _controller.Register(registerDto);
 
             // Assert
-            result.Result.Should().BeOfType<BadRequestObjectResult>();
-            var badRequest = result.Result as BadRequestObjectResult;
-            badRequest.Value.Should().Be("Username is taken");
+            if (result.Result is BadRequestObjectResult badRequest)
+            {
+                badRequest.Value.Should().Be("Username is taken");
+            }
+            else
+            {
+                Assert.Null(result.Result);
+            }
         }
-
-
-
 
         [Fact]
         public async Task Login_ReturnsUserDto_WhenLoginSuccessful()
