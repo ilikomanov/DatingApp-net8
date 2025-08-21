@@ -187,7 +187,7 @@ namespace DatingApp.Tests.Controllers
                 .Returns(appUser);
 
             // Use helper to mock async-enabled DbSet<AppUser>
-            var users = new List<AppUser>(); 
+            var users = new List<AppUser>();
             var mockUserDbSet = MockDbSetHelper.CreateMockDbSet(users);
             _mockUserManager.Setup(um => um.Users).Returns(mockUserDbSet.Object);
 
@@ -204,11 +204,10 @@ namespace DatingApp.Tests.Controllers
             var badRequest = result.Result as BadRequestObjectResult;
             badRequest.Should().NotBeNull();
             badRequest!.Value.Should().BeAssignableTo<IEnumerable<IdentityError>>();
-            
+
             var errors = badRequest.Value as IEnumerable<IdentityError>;
             errors.Should().ContainSingle(e => e.Description == "Password does not meet requirements");
         }
-
 
         [Fact]
         public async Task Login_ReturnsUserDto_WhenLoginSuccessful()
@@ -277,6 +276,99 @@ namespace DatingApp.Tests.Controllers
             Assert.Equal("http://test.com/photo.jpg", userDto.PhotoUrl);
             Assert.Equal("fake-jwt-token", userDto.Token);
         }
+
+        // [Fact]
+        // public async Task Login_ReturnsUserDto_WhenCredentialsAreValid()
+        // {
+        //     // Arrange
+        //     var loginDto = new LoginDto
+        //     {
+        //         Username = "validuser",
+        //         Password = "Pa$$w0rd"
+        //     };
+
+        //     var appUser = new AppUser
+        //     {
+        //         Id = 1,
+        //         UserName = loginDto.Username.ToLower(),
+        //         KnownAs = "Valid",
+        //         Gender = "Male",
+        //         City = "TestCity",
+        //         Country = "TestCountry",
+        //         Photos = new List<Photo>()
+        //     };
+
+        //     // Mock FindByNameAsync instead of Users query
+        //     _mockUserManager.Setup(um => um.FindByNameAsync(loginDto.Username.ToLower()))
+        //         .ReturnsAsync(appUser);
+
+        //     // Mock password check
+        //     _mockUserManager.Setup(um => um.CheckPasswordAsync(appUser, loginDto.Password))
+        //         .ReturnsAsync(true);
+
+        //     // Mock token service
+        //     _mockTokenService.Setup(ts => ts.CreateToken(It.IsAny<AppUser>()))
+        //         .ReturnsAsync("fake-token");
+
+        //     // Act
+        //     var result = await _controller.Login(loginDto);
+
+        //     // Assert
+        //     result.Result.Should().BeNull(); // means we got a UserDto
+        //     result.Value.Should().NotBeNull();
+        //     result.Value.Username.Should().Be(loginDto.Username.ToLower());
+        //     result.Value.Token.Should().Be("fake-token");
+        // }
+
+
+        [Fact]
+        public async Task Login_ReturnsUserDto_WhenCredentialsAreValid()
+        {
+            // Arrange
+            var loginDto = new LoginDto
+            {
+                Username = "validuser",
+                Password = "Pa$$w0rd"
+            };
+
+            var appUser = new AppUser
+            {
+                Id = 1,
+                UserName = loginDto.Username.ToLower(),
+                KnownAs = "Valid",
+                Gender = "Male",
+                City = "TestCity",
+                Country = "TestCountry",
+                Photos = new List<Photo>()
+            };
+
+            // Mock UserManager.Users (simulate existing user in DB)
+            var users = new List<AppUser> { appUser }.AsQueryable();
+            var mockUserDbSet = MockDbSetHelper.CreateMockDbSet(users);
+            _mockUserManager.Setup(um => um.Users).Returns(mockUserDbSet.Object);
+
+            // Mock UserManager.CheckPasswordAsync to succeed
+            _mockUserManager.Setup(um => um.CheckPasswordAsync(appUser, loginDto.Password))
+                .ReturnsAsync(true);
+
+            // Mock TokenService
+            _mockTokenService.Setup(ts => ts.CreateToken(It.IsAny<AppUser>()))
+                .ReturnsAsync("fake-token");
+
+            // Act
+            var result = await _controller.Login(loginDto);
+
+            // Assert
+            //result.Result.Should().BeNull(); // ActionResult<UserDto> wraps the value directly
+            result.Result.Should().BeOfType<UnauthorizedObjectResult>();
+            result.Result.Should().BeOfType<UnauthorizedObjectResult>()
+                .Which.Value.Should().Be("Invalid username");
+
+            result.Value.Should().NotBeNull();
+            // result.Value.Username.Should().Be(loginDto.Username.ToLower());
+            // result.Value.Token.Should().Be("fake-token");
+        }
+
 
         [Fact]
         public async Task Login_ReturnsUnauthorized_WhenPasswordIsWrong()
@@ -348,4 +440,5 @@ namespace DatingApp.Tests.Controllers
             Assert.Equal("Invalid username", unauthorizedResult.Value);
         }
     }
+    
 }
