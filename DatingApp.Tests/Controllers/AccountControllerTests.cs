@@ -163,6 +163,54 @@ namespace DatingApp.Tests.Controllers
         }
 
         [Fact]
+        public async Task Register_ReturnsBadRequest_WhenPasswordIsInvalid()
+        {
+            // Arrange
+            var registerDto = new RegisterDto
+            {
+                Username = "newuser",
+                Password = "short" // invalid password
+            };
+
+            var appUser = new AppUser
+            {
+                UserName = registerDto.Username.ToLower(),
+                KnownAs = "Test",
+                Gender = "Male",
+                City = "TestCity",
+                Country = "TestCountry",
+                Photos = new List<Photo>()
+            };
+
+            // Mock mapper
+            _mockMapper.Setup(m => m.Map<AppUser>(It.IsAny<RegisterDto>()))
+                .Returns(appUser);
+
+            // Use helper to mock async-enabled DbSet<AppUser>
+            var users = new List<AppUser>(); 
+            var mockUserDbSet = MockDbSetHelper.CreateMockDbSet(users);
+            _mockUserManager.Setup(um => um.Users).Returns(mockUserDbSet.Object);
+
+            // Mock CreateAsync to fail (invalid password scenario)
+            var identityError = new IdentityError { Description = "Password does not meet requirements" };
+            _mockUserManager.Setup(um => um.CreateAsync(It.IsAny<AppUser>(), It.IsAny<string>()))
+                .ReturnsAsync(IdentityResult.Failed(identityError));
+
+            // Act
+            var result = await _controller.Register(registerDto);
+
+            // Assert
+            result.Result.Should().BeOfType<BadRequestObjectResult>();
+            var badRequest = result.Result as BadRequestObjectResult;
+            badRequest.Should().NotBeNull();
+            badRequest!.Value.Should().BeAssignableTo<IEnumerable<IdentityError>>();
+            
+            var errors = badRequest.Value as IEnumerable<IdentityError>;
+            errors.Should().ContainSingle(e => e.Description == "Password does not meet requirements");
+        }
+
+
+        [Fact]
         public async Task Login_ReturnsUserDto_WhenLoginSuccessful()
         {
             // Arrange
