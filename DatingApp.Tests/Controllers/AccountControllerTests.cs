@@ -364,9 +364,9 @@ namespace DatingApp.Tests.Controllers
             result.Result.Should().BeOfType<UnauthorizedObjectResult>()
                 .Which.Value.Should().Be("Invalid username");
 
-            
 
-          //  result.Value.Should().NotBeNull();
+
+            //  result.Value.Should().NotBeNull();
             // result.Value.Username.Should().Be(loginDto.Username.ToLower());
             // result.Value.Token.Should().Be("fake-token");
         }
@@ -441,6 +441,32 @@ namespace DatingApp.Tests.Controllers
             var unauthorizedResult = Assert.IsType<UnauthorizedObjectResult>(result.Result);
             Assert.Equal("Invalid username", unauthorizedResult.Value);
         }
+        
+        [Fact]
+        public async Task Login_ReturnsUnauthorized_WhenUserDoesNotExistV2()
+        {
+            // Arrange
+            var loginDto = new LoginDto
+            {
+                Username = "nonexistent",
+                Password = "Pa$$w0rd"
+            };
+
+            // Empty user list
+            var users = new List<AppUser>();
+            var mockUserDbSet = MockDbSetHelper.CreateMockDbSet(users);
+            _mockUserManager.Setup(um => um.Users).Returns(mockUserDbSet.Object);
+
+            // Act
+            var result = await _controller.Login(loginDto);
+
+            // Assert
+            result.Result.Should().BeOfType<UnauthorizedObjectResult>();
+            var unauthorized = result.Result as UnauthorizedObjectResult;
+            unauthorized.Should().NotBeNull();
+            unauthorized!.Value.Should().Be("Invalid username");
+        }
+
     }
     
 }
