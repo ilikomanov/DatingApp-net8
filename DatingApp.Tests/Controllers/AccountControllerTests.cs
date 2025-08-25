@@ -447,9 +447,9 @@ namespace DatingApp.Tests.Controllers
             var result = await _controller.Login(loginDto);
 
             // Assert
-           var unauthorizedResult = result.Result as UnauthorizedObjectResult;
-           unauthorizedResult.Should().NotBeNull();
-           unauthorizedResult.Value.Should().NotBeNull();
+            var unauthorizedResult = result.Result as UnauthorizedObjectResult;
+            unauthorizedResult.Should().NotBeNull();
+            unauthorizedResult.Value.Should().NotBeNull();
         }
 
         [Fact]
@@ -478,7 +478,7 @@ namespace DatingApp.Tests.Controllers
             var unauthorizedResult = Assert.IsType<UnauthorizedObjectResult>(result.Result);
             Assert.Equal("Invalid username", unauthorizedResult.Value);
         }
-        
+
         [Fact]
         public async Task Login_ReturnsUnauthorized_WhenUserDoesNotExistV2()
         {
@@ -503,6 +503,34 @@ namespace DatingApp.Tests.Controllers
             unauthorized.Should().NotBeNull();
             unauthorized!.Value.Should().Be("Invalid username");
         }
+        
+        [Fact]
+        public async Task Login_ReturnsUnauthorized_WhenUsernameDoesNotExist()
+        {
+            // Arrange
+            var loginDto = new LoginDto
+            {
+                Username = "nonexistent",
+                Password = "SomePassword123"
+            };
+
+            // Empty user list → no user will match
+            var users = new List<AppUser>();
+            var mockUserDbSet = MockDbSetHelper.CreateMockDbSet(users);
+            _mockUserManager.Setup(um => um.Users).Returns(mockUserDbSet.Object);
+
+            // Act
+            var result = await _controller.Login(loginDto);
+
+            // Assert
+            result.Result.Should().NotBeNull();
+            result.Result.Should().BeAssignableTo<UnauthorizedObjectResult>();
+
+            var unauthorized = result.Result as UnauthorizedObjectResult;
+            unauthorized.Should().NotBeNull();
+            unauthorized!.Value.Should().Be("Invalid username");
+        }
+
 
     }
     
