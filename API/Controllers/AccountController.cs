@@ -38,6 +38,9 @@ public class AccountController(UserManager<AppUser> userManager, ITokenService t
     [HttpPost("login")]
     public async Task<ActionResult<UserDto>> Login(LoginDto loginDto)
     {
+        if (loginDto == null)
+            return BadRequest("Invalid login request");
+
         var user = await userManager.Users
             .Include(p => p.Photos)
                 .FirstOrDefaultAsync(x =>

@@ -503,7 +503,7 @@ namespace DatingApp.Tests.Controllers
             unauthorized.Should().NotBeNull();
             unauthorized!.Value.Should().Be("Invalid username");
         }
-        
+
         [Fact]
         public async Task Login_ReturnsUnauthorized_WhenUsernameDoesNotExist()
         {
@@ -531,7 +531,17 @@ namespace DatingApp.Tests.Controllers
             unauthorized!.Value.Should().Be("Invalid username");
         }
 
+        [Fact]
+        public async Task Login_ReturnsBadRequest_WhenLoginDtoIsNull()
+        {
+            // Act
+            var result = await _controller.Login(null);
 
+            // Assert
+            result.Result.Should().BeOfType<BadRequestObjectResult>();
+            var badRequest = result.Result as BadRequestObjectResult;
+            badRequest.Should().NotBeNull();
+            badRequest!.Value.Should().Be("Invalid login request");
+        }
     }
-    
 }
