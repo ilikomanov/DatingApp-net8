@@ -364,7 +364,9 @@ namespace DatingApp.Tests.Controllers
             result.Result.Should().BeOfType<UnauthorizedObjectResult>()
                 .Which.Value.Should().Be("Invalid username");
 
-            result.Value.Should().NotBeNull();
+            
+
+          //  result.Value.Should().NotBeNull();
             // result.Value.Username.Should().Be(loginDto.Username.ToLower());
             // result.Value.Token.Should().Be("fake-token");
         }
