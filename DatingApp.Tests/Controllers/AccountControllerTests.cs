@@ -416,6 +416,43 @@ namespace DatingApp.Tests.Controllers
         }
 
         [Fact]
+        public async Task Login_ReturnsUnauthorized_WhenPasswordIsInvalid()
+        {
+            // Arrange
+            var loginDto = new LoginDto
+            {
+                Username = "existinguser",
+                Password = "wrongpassword"
+            };
+
+            var appUser = new AppUser
+            {
+                UserName = loginDto.Username.ToLower(),
+                KnownAs = "Test",
+                Gender = "Male",
+                City = "TestCity",
+                Country = "TestCountry",
+                Photos = new List<Photo>()
+            };
+
+            var users = new List<AppUser> { appUser };
+            var mockUserDbSet = MockDbSetHelper.CreateMockDbSet(users);
+            _mockUserManager.Setup(um => um.Users).Returns(mockUserDbSet.Object);
+
+            // Mock password check -> fail
+            _mockUserManager.Setup(um => um.CheckPasswordAsync(appUser, loginDto.Password))
+                .ReturnsAsync(false);
+
+            // Act
+            var result = await _controller.Login(loginDto);
+
+            // Assert
+           var unauthorizedResult = result.Result as UnauthorizedObjectResult;
+           unauthorizedResult.Should().NotBeNull();
+           unauthorizedResult.Value.Should().NotBeNull();
+        }
+
+        [Fact]
         public async Task Login_ReturnsUnauthorized_WhenUserDoesNotExist()
         {
             // Arrange
