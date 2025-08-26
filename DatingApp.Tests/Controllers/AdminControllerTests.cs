@@ -98,6 +98,48 @@ namespace DatingApp.Tests.Controllers
         }
 
         [Fact]
+        public async Task EditRoles_ReturnsOk_WhenRolesAreUpdated()
+        {
+            // Arrange
+            var user = new AppUser
+            {
+                Id = 1,
+                UserName = "alice",
+                Gender = "female",
+                KnownAs = "Alice",
+                City = "Paris",
+                Country = "France"
+            };
+
+            var existingRoles = new List<string> { "Member" };
+            var updatedRoles = new List<string> { "Admin" };
+
+            _mockUserManager.Setup(um => um.FindByNameAsync("alice"))
+                .ReturnsAsync(user);
+
+            _mockUserManager.Setup(um => um.GetRolesAsync(user))
+                .ReturnsAsync(existingRoles);
+
+            _mockUserManager.Setup(um => um.AddToRolesAsync(user, It.IsAny<IEnumerable<string>>()))
+                .ReturnsAsync(IdentityResult.Success);
+
+            _mockUserManager.Setup(um => um.RemoveFromRolesAsync(user, It.IsAny<IEnumerable<string>>()))
+                .ReturnsAsync(IdentityResult.Success);
+
+            _mockUserManager.Setup(um => um.GetRolesAsync(user))
+                .ReturnsAsync(updatedRoles);
+
+            // Act
+            var result = await _controller.EditRoles("alice", "Admin");
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            var roles = Assert.IsAssignableFrom<IEnumerable<string>>(okResult.Value);
+            Assert.Single(roles);
+            Assert.Equal("Admin", roles.First());
+        }
+
+        [Fact]
         public async Task EditRoles_ReturnsBadRequest_WhenRolesEmpty()
         {
             // Act
