@@ -164,5 +164,17 @@ namespace DatingApp.Tests.Controllers
             var badRequest = Assert.IsType<BadRequestObjectResult>(result);
             Assert.Equal("User not found", badRequest.Value);
         }
+
+        [Fact]
+        public async Task EditRoles_ReturnsBadRequest_WhenNoRolesProvided()
+        {
+            
+            // Act
+            var result = await _controller.EditRoles("alice", "");
+
+            // Assert
+            var badRequest = Assert.IsType<BadRequestObjectResult>(result);
+            Assert.Equal("You must select at least one role", badRequest.Value);
+        }
     }
 }
