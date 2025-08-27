@@ -46,6 +46,16 @@ namespace DatingApp.Tests.Controllers
             Assert.Equal("secret text", okResult.Value);
         }
 
+        [Fact]
+        public void GetNotFound_ReturnsNotFound()
+        {
+            // Act
+            var result = _controller.GetNotFound();
+
+            // Assert
+            Assert.IsType<NotFoundResult>(result.Result);
+        }
+
         public void Dispose()
         {
             _context.Dispose();
