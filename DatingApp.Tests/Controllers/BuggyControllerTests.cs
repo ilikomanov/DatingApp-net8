@@ -67,6 +67,13 @@ namespace DatingApp.Tests.Controllers
             Assert.Equal("This was not a good request", badRequestResult.Value);
         }
 
+        [Fact]
+        public void GetServerError_ThrowsException()
+        {
+            // Act & Assert
+            Assert.Throws<Exception>(() => _controller.GetServerError());
+        }
+
         public void Dispose()
         {
             _context.Dispose();
