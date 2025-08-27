@@ -168,7 +168,7 @@ namespace DatingApp.Tests.Controllers
         [Fact]
         public async Task EditRoles_ReturnsBadRequest_WhenNoRolesProvided()
         {
-            
+
             // Act
             var result = await _controller.EditRoles("alice", "");
 
@@ -208,5 +208,43 @@ namespace DatingApp.Tests.Controllers
             var badRequest = Assert.IsType<BadRequestObjectResult>(result);
             Assert.Equal("Failed to add to roles", badRequest.Value);
         }
+        
+        [Fact]
+        public async Task EditRoles_ReturnsBadRequest_WhenRemoveFromRolesFails()
+        {
+            // Arrange
+            var user = new AppUser
+            {
+                Id = 1,
+                UserName = "bob",
+                Gender = "male",
+                KnownAs = "Bob",
+                City = "London",
+                Country = "UK"
+            };
+
+            _mockUserManager.Setup(um => um.FindByNameAsync("bob"))
+                .ReturnsAsync(user);
+
+            // User currently has Admin role
+            _mockUserManager.Setup(um => um.GetRolesAsync(user))
+                .ReturnsAsync(new List<string> { "Admin" });
+
+            // Add succeeds
+            _mockUserManager.Setup(um => um.AddToRolesAsync(user, It.IsAny<IEnumerable<string>>()))
+                .ReturnsAsync(IdentityResult.Success);
+
+            // Remove fails
+            _mockUserManager.Setup(um => um.RemoveFromRolesAsync(user, It.IsAny<IEnumerable<string>>()))
+                .ReturnsAsync(IdentityResult.Failed(new IdentityError { Description = "Failed to remove role" }));
+
+            // Act
+            var result = await _controller.EditRoles("bob", "Member");
+
+            // Assert
+            var badRequest = Assert.IsType<BadRequestObjectResult>(result);
+            Assert.Equal("Failed to remove from roles", badRequest.Value);
+        }
+
     }
 }
