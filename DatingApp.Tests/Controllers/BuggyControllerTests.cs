@@ -56,6 +56,17 @@ namespace DatingApp.Tests.Controllers
             Assert.IsType<NotFoundResult>(result.Result);
         }
 
+        [Fact]
+        public void GetBadRequest_ReturnsBadRequest()
+        {
+            // Act
+            var result = _controller.GetBadRequest();
+
+            // Assert
+            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result.Result);
+            Assert.Equal("This was not a good request", badRequestResult.Value);
+        }
+
         public void Dispose()
         {
             _context.Dispose();
