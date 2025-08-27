@@ -176,5 +176,37 @@ namespace DatingApp.Tests.Controllers
             var badRequest = Assert.IsType<BadRequestObjectResult>(result);
             Assert.Equal("You must select at least one role", badRequest.Value);
         }
+
+        [Fact]
+        public async Task EditRoles_ReturnsBadRequest_WhenAddToRolesFails()
+        {
+            // Arrange
+            var user = new AppUser
+            {
+                Id = 1,
+                UserName = "alice",
+                Gender = "female",
+                KnownAs = "Alice",
+                City = "Paris",
+                Country = "France"
+            };
+
+            _mockUserManager.Setup(um => um.FindByNameAsync("alice"))
+                .ReturnsAsync(user);
+
+            _mockUserManager.Setup(um => um.GetRolesAsync(user))
+                .ReturnsAsync(new List<string>());
+
+            // Simulate AddToRolesAsync failing
+            _mockUserManager.Setup(um => um.AddToRolesAsync(user, It.IsAny<IEnumerable<string>>()))
+                .ReturnsAsync(IdentityResult.Failed(new IdentityError { Description = "Failed to add role" }));
+
+            // Act
+            var result = await _controller.EditRoles("alice", "Admin");
+
+            // Assert
+            var badRequest = Assert.IsType<BadRequestObjectResult>(result);
+            Assert.Equal("Failed to add to roles", badRequest.Value);
+        }
     }
 }
