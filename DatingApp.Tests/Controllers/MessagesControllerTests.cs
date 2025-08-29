@@ -151,74 +151,33 @@ namespace DatingApp.Tests.Controllers
             Assert.Equal("Cannot send message at this time", badRequest.Value);
         }
 
-        //         [Fact]
-        // public async Task GetMessagesForUser_ReturnsOk_WithPagedMessages()
-        // {
-        //     // Arrange
-        //     var username = "alice";
-        //     var messageParams = new MessageParams(); // defaults
+        [Fact]
+        public async Task GetMessagesForUser_ReturnsPagedMessages()
+        {
+            // Arrange
+            var username = "alice";
+            var messageParams = new MessageParams(); // defaults
+            var messages = new List<MessageDto>
+            {
+                new MessageDto { Id = 1, Content = "Hello", SenderUsername = "alice", RecipientUsername = "bob", SenderPhotoUrl="s.jpg", RecipientPhotoUrl="r.jpg" },
+                new MessageDto { Id = 2, Content = "Hi", SenderUsername = "bob", RecipientUsername = "alice", SenderPhotoUrl="r.jpg", RecipientPhotoUrl="s.jpg" }
+            };
 
-        //     var messages = new List<MessageDto>
-        //     {
-        //         new MessageDto { Id = 1, Content = "Hello", SenderUsername = "alice", RecipientUsername = "bob", SenderPhotoUrl="s.jpg", RecipientPhotoUrl="r.jpg" },
-        //         new MessageDto { Id = 2, Content = "Hi", SenderUsername = "bob", RecipientUsername = "alice", SenderPhotoUrl="r.jpg", RecipientPhotoUrl="s.jpg" }
-        //     };
+            var pagedList = new PagedList<MessageDto>(messages, messages.Count, 1, messages.Count);
 
-        //     var pagedList = new PagedList<MessageDto>(messages, messages.Count, 1, messages.Count);
+            _mockUow.Setup(u => u.MessageRepository.GetMessagesForUser(It.Is<MessageParams>(m => m.Username == username)))
+                .ReturnsAsync(pagedList);
 
-        //     _mockUow.Setup(u => u.MessageRepository.GetMessagesForUser(It.Is<MessageParams>(m => m.Username == username)))
-        //         .ReturnsAsync(pagedList);
+            // Act
+            var result = await _controller.GetMessagesForUser(messageParams);
 
-        //     // Act
-        //     var result = await _controller.GetMessagesForUser(messageParams);
+            // Assert
+            // Access Value directly instead of Result
+            var returnedMessages = Assert.IsAssignableFrom<PagedList<MessageDto>>(result.Value);
+            Assert.Equal(2, returnedMessages.Count);
 
-        //     // Assert
-        //     var okResult = Assert.IsType<OkObjectResult>(result.Result); // result.Result works now
-        //     var returnedMessages = Assert.IsAssignableFrom<IEnumerable<MessageDto>>(okResult.Value);
-
-        //     Assert.Equal(2, returnedMessages.Count());
-        //     Assert.Contains(returnedMessages, m => m.Content == "Hello");
-        //     Assert.Contains(returnedMessages, m => m.Content == "Hi");
-
-        //     // Verify the pagination header exists
-        //     Assert.True(_controller.Response.Headers.ContainsKey("Pagination"));
-        //     var headerValue = _controller.Response.Headers["Pagination"].ToString();
-        //     headerValue.Should().Contain("\"CurrentPage\":1");
-        //     headerValue.Should().Contain($"\"TotalPages\":{pagedList.TotalPages}");
-        //     headerValue.Should().Contain($"\"PageSize\":{pagedList.PageSize}");
-        //     headerValue.Should().Contain($"\"TotalCount\":{pagedList.TotalCount}");
-        // }
-
-[Fact]
-public async Task GetMessagesForUser_ReturnsPagedMessages()
-{
-    // Arrange
-    var username = "alice";
-    var messageParams = new MessageParams(); // defaults
-    var messages = new List<MessageDto>
-    {
-        new MessageDto { Id = 1, Content = "Hello", SenderUsername = "alice", RecipientUsername = "bob", SenderPhotoUrl="s.jpg", RecipientPhotoUrl="r.jpg" },
-        new MessageDto { Id = 2, Content = "Hi", SenderUsername = "bob", RecipientUsername = "alice", SenderPhotoUrl="r.jpg", RecipientPhotoUrl="s.jpg" }
-    };
-
-    var pagedList = new PagedList<MessageDto>(messages, messages.Count, 1, messages.Count);
-
-    _mockUow.Setup(u => u.MessageRepository.GetMessagesForUser(It.Is<MessageParams>(m => m.Username == username)))
-        .ReturnsAsync(pagedList);
-
-    // Act
-    var result = await _controller.GetMessagesForUser(messageParams);
-
-    // Assert
-    // Access Value directly instead of Result
-    var returnedMessages = Assert.IsAssignableFrom<PagedList<MessageDto>>(result.Value);
-    Assert.Equal(2, returnedMessages.Count);
-
-    // You can still verify the Pagination header
-    Assert.True(_controller.Response.Headers.ContainsKey("Pagination"));
-}
-
-
-
+            // You can still verify the Pagination header
+            Assert.True(_controller.Response.Headers.ContainsKey("Pagination"));
+        }
     }
 }
