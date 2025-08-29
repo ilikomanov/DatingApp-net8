@@ -225,5 +225,26 @@ namespace DatingApp.Tests.Controllers
             Assert.Contains(returnedMessages, m => m.Content == "Hi Alice");
         }
 
+        [Fact]
+        public async Task GetMessageThread_ReturnsOk_WithEmptyList_WhenNoMessagesExist()
+        {
+            // Arrange
+            var currentUsername = "alice";
+            var otherUsername = "bob";
+
+            _mockMessageRepo
+                .Setup(r => r.GetMessageThread(currentUsername, otherUsername))
+                .ReturnsAsync(new List<MessageDto>()); // no messages
+
+            // Act
+            var result = await _controller.GetMessageThread(otherUsername);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result.Result);
+            var returnedMessages = Assert.IsAssignableFrom<IEnumerable<MessageDto>>(okResult.Value);
+
+            Assert.Empty(returnedMessages); // should be an empty list
+        }
+
     }
 }
