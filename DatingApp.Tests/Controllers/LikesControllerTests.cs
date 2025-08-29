@@ -263,5 +263,27 @@ namespace DatingApp.Tests.Controllers
             Assert.Contains(returnedUsers, u => u.Username == "alice");
             Assert.Contains(returnedUsers, u => u.Username == "bob");
         }
+
+        [Fact]
+        public async Task GetUserLikes_ReturnsOk_WhenNoUsers()
+        {
+            // Arrange
+            var likesParams = new LikesParams { Predicate = "liked" };
+            var emptyPagedList = new PagedList<MemberDto>(
+                new List<MemberDto>(), 0, 1, 10
+            );
+
+            _mockLikesRepo.Setup(r => r.GetUserLikes(It.IsAny<LikesParams>()))
+                .ReturnsAsync(emptyPagedList);
+
+            // Act
+            var result = await _controller.GetUserLikes(likesParams);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result.Result);
+            var returnedUsers = Assert.IsAssignableFrom<IEnumerable<MemberDto>>(okResult.Value);
+
+            Assert.Empty(returnedUsers);
+        }
     }
 }
