@@ -58,6 +58,18 @@ namespace DatingApp.Tests.Controllers
         }
 
         [Fact]
+        public async Task ToggleLike_ReturnsBadRequest_WhenLikingSelfV2()
+        {
+            int userId = 1;
+            _controller.SetupUserId(userId);
+
+            var result = await _controller.ToggleLike(userId);
+
+            var badRequest = Assert.IsType<BadRequestObjectResult>(result);
+            Assert.Equal("You cannot like yourself", badRequest.Value);
+        }
+
+        [Fact]
         public async Task ToggleLike_ReturnsBadRequest_WhenSaveFails()
         {
             // Arrange
