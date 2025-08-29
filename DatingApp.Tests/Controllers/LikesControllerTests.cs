@@ -55,6 +55,27 @@ namespace DatingApp.Tests.Controllers
         }
 
         [Fact]
+        public async Task ToggleLike_ReturnsBadRequest_WhenSaveFails()
+        {
+            // Arrange
+            var targetUserId = 10;
+            _mockLikesRepo.Setup(r => r.GetUserLike(5, targetUserId))
+                .ReturnsAsync((UserLike?)null);
+
+            _mockUow.Setup(u => u.Complete()).ReturnsAsync(false);
+
+            // Act
+            var result = await _controller.ToggleLike(targetUserId);
+
+            // Assert
+            var badRequest = Assert.IsType<BadRequestObjectResult>(result);
+            Assert.Equal("Failed to update like", badRequest.Value);
+
+            _mockLikesRepo.Verify(r => r.AddLike(It.IsAny<UserLike>()), Times.Once);
+            _mockUow.Verify(u => u.Complete(), Times.Once);
+        }
+
+        [Fact]
         public async Task ToggleLike_AddsNewLike_WhenNoneExists_AndSaveSucceeds()
         {
             // Arrange
