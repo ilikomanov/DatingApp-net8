@@ -297,5 +297,29 @@ namespace DatingApp.Tests.Controllers
 
             Assert.Empty(returnedUsers);
         }
+
+        [Fact]
+        public async Task GetUserLikes_ReturnsEmptyList_WhenNoUsersLiked()
+        {
+            // Arrange
+            var likesParams = new LikesParams { Predicate = "liked" };
+            
+            // Return an empty PagedList
+            var emptyList = new PagedList<MemberDto>(
+                new List<MemberDto>(), 0, 1, 10
+            );
+
+            _mockLikesRepo.Setup(r => r.GetUserLikes(It.IsAny<LikesParams>()))
+                .ReturnsAsync(emptyList);
+
+            // Act
+            var result = await _controller.GetUserLikes(likesParams);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result.Result);
+            var returnedUsers = Assert.IsAssignableFrom<IEnumerable<MemberDto>>(okResult.Value);
+
+            Assert.Empty(returnedUsers); // Expect no users
+        }
     }
 }
