@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using Xunit;
+using DatingApp.Tests.TestHelpers;
 
 namespace DatingApp.Tests.Controllers
 {
@@ -142,6 +143,34 @@ namespace DatingApp.Tests.Controllers
         }
 
         [Fact]
+        public async Task GetCurrentUserLikeIds_ReturnsOk_WithIdsV2()
+        {
+            // Arrange
+            var userId = 1;
+            var likedIds = new List<int> { 2, 3, 4 };
+
+            // Mock User.GetUserId() extension
+            _controller.ControllerContext = new ControllerContext();
+            _controller.ControllerContext.HttpContext = new DefaultHttpContext();
+            _controller.ControllerContext.HttpContext.User = TestUserHelpers.CreateTestUserClaimsPrincipal(userId);
+
+            _mockLikesRepo.Setup(r => r.GetCurrentUserLikeIds(userId))
+                .ReturnsAsync(likedIds);
+
+            // Act
+            var result = await _controller.GetCurrentUserLikeIds();
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result.Result);
+            var returnedIds = Assert.IsAssignableFrom<IEnumerable<int>>(okResult.Value);
+
+            Assert.Equal(3, returnedIds.Count());
+            Assert.Contains(2, returnedIds);
+            Assert.Contains(3, returnedIds);
+            Assert.Contains(4, returnedIds);
+        }
+
+        [Fact]
         public async Task GetCurrentUserLikeIds_ReturnsOk_WithEmptyList_WhenNoLikesExist()
         {
             // Arrange
@@ -180,6 +209,8 @@ namespace DatingApp.Tests.Controllers
 
             Assert.Empty(returnedUsers);
         }
+
+       
 
         [Fact]
         public async Task GetUserLikes_ReturnsOk_WithUsers()
