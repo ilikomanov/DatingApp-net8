@@ -179,5 +179,51 @@ namespace DatingApp.Tests.Controllers
             // You can still verify the Pagination header
             Assert.True(_controller.Response.Headers.ContainsKey("Pagination"));
         }
+
+        [Fact]
+        public async Task GetMessageThread_ReturnsOk_WithMessages()
+        {
+            // Arrange
+            var currentUsername = "alice";
+            var otherUsername = "bob";
+
+            var messages = new List<MessageDto>
+            {
+                new MessageDto
+                {
+                    Id = 1,
+                    Content = "Hello Bob",
+                    SenderUsername = "alice",
+                    RecipientUsername = "bob",
+                    SenderPhotoUrl = "alice.jpg",
+                    RecipientPhotoUrl = "bob.jpg"
+                },
+                new MessageDto
+                {
+                    Id = 2,
+                    Content = "Hi Alice",
+                    SenderUsername = "bob",
+                    RecipientUsername = "alice",
+                    SenderPhotoUrl = "bob.jpg",
+                    RecipientPhotoUrl = "alice.jpg"
+                }
+            };
+
+            _mockMessageRepo
+                .Setup(r => r.GetMessageThread(currentUsername, otherUsername))
+                .ReturnsAsync(messages);
+
+            // Act
+            var result = await _controller.GetMessageThread(otherUsername);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result.Result);
+            var returnedMessages = Assert.IsAssignableFrom<IEnumerable<MessageDto>>(okResult.Value);
+
+            Assert.Equal(2, returnedMessages.Count());
+            Assert.Contains(returnedMessages, m => m.Content == "Hello Bob");
+            Assert.Contains(returnedMessages, m => m.Content == "Hi Alice");
+        }
+
     }
 }
