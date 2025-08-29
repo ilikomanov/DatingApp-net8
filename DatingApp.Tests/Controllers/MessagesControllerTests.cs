@@ -19,9 +19,13 @@ namespace DatingApp.Tests.Controllers
         private readonly Mock<IUnitOfWork> _mockUow = new();
         private readonly Mock<IMapper> _mockMapper = new();
         private readonly MessagesController _controller;
+        private readonly Mock<IMessageRepository> _mockMessageRepo = new();
+        private readonly Mock<IUserRepository> _mockUserRepo = new();
 
         public MessagesControllerTests()
         {
+            _mockUow.Setup(u => u.UserRepository).Returns(_mockUserRepo.Object);
+            _mockUow.Setup(u => u.MessageRepository).Returns(_mockMessageRepo.Object);
             _controller = new MessagesController(_mockUow.Object, _mockMapper.Object);
 
             var user = new ClaimsPrincipal(new ClaimsIdentity(new[]
@@ -34,6 +38,68 @@ namespace DatingApp.Tests.Controllers
             {
                 HttpContext = new DefaultHttpContext { User = user }
             };
+        }
+
+        [Fact]
+        public async Task CreateMessage_ReturnsOk_WhenMessageSaved()
+        {
+            // Arrange
+            var dto = new CreateMessageDto
+            {
+                RecipientUsername = "bob",
+                Content = "Hello"
+            };
+
+            var sender = new AppUser
+            {
+                UserName = "alice",
+                Gender = "female",
+                KnownAs = "Alice",
+                City = "Paris",
+                Country = "France"
+            };
+
+            var recipient = new AppUser
+            {
+                UserName = "bob",
+                Gender = "male",
+                KnownAs = "Bob",
+                City = "London",
+                Country = "UK"
+            };
+
+            var message = new Message
+            {
+                Sender = sender,
+                Recipient = recipient,
+                SenderUsername = "alice",
+                RecipientUsername = "bob",
+                Content = "Hello"
+            };
+            var messageDto = new MessageDto
+            {
+                Id = 1,
+                Content = "Hello",
+                SenderUsername = "alice",
+                RecipientUsername = "bob",
+                SenderPhotoUrl = "sender-photo.jpg",
+                RecipientPhotoUrl = "recipient-photo.jpg"
+            };
+
+            _mockUow.Setup(u => u.UserRepository.GetUserByUsernameAsync("alice")).ReturnsAsync(sender);
+            _mockUow.Setup(u => u.UserRepository.GetUserByUsernameAsync("bob")).ReturnsAsync(recipient);
+            _mockMapper.Setup(m => m.Map<MessageDto>(It.IsAny<Message>())).Returns(messageDto);
+            _mockUow.Setup(u => u.Complete()).ReturnsAsync(true);
+
+            // Act
+            var result = await _controller.CreateMessage(dto);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result.Result);
+            var returnedDto = Assert.IsType<MessageDto>(okResult.Value);
+            Assert.Equal("alice", returnedDto.SenderUsername);
+            Assert.Equal("bob", returnedDto.RecipientUsername);
+            Assert.Equal("Hello", returnedDto.Content);
         }
 
         [Fact]
