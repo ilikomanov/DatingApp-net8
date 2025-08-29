@@ -33,7 +33,7 @@ namespace DatingApp.Tests.Controllers
         {
             _mockUnitOfWork.Setup(u => u.LikesRepository).Returns(_mockLikesRepo.Object);
             _controller = new LikesController(_mockUnitOfWork.Object);
-            
+
             // default logged-in user id = 5
             _controller.ControllerContext = new ControllerContext
             {
@@ -160,6 +160,42 @@ namespace DatingApp.Tests.Controllers
             var okResult = Assert.IsType<OkObjectResult>(result.Result);
             var returnedUsers = Assert.IsAssignableFrom<IEnumerable<MemberDto>>(okResult.Value);
             Assert.Empty(returnedUsers);
+        }
+        
+        [Fact]
+        public async Task GetUserLikes_SetsPaginationHeader_WhenCalled()
+        {
+            // Arrange
+            var likesParams = new LikesParams { Predicate = "liked" };
+            var members = new List<MemberDto>
+            {
+                new MemberDto { Id = 1, Username = "alice" },
+                new MemberDto { Id = 2, Username = "bob" }
+            };
+
+            var pagedList = new PagedList<MemberDto>(members, count: 50, pageNumber: 2, pageSize: 10);
+
+            _mockLikesRepo.Setup(r => r.GetUserLikes(It.IsAny<LikesParams>()))
+                .ReturnsAsync(pagedList);
+
+            // Act
+            var result = await _controller.GetUserLikes(likesParams);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result.Result);
+            var returnedUsers = Assert.IsAssignableFrom<IEnumerable<MemberDto>>(okResult.Value);
+
+            Assert.Equal(2, returnedUsers.Count());
+            
+            // Verify that the pagination header exists
+            Assert.True(_controller.Response.Headers.ContainsKey("Pagination"));
+            
+            // Optionally, you can parse and verify the header content
+            var headerValue = _controller.Response.Headers["Pagination"].ToString();
+            headerValue.Should().Contain("\"currentPage\":2");
+            headerValue.Should().Contain("\"totalPages\":5");
+            headerValue.Should().Contain("\"itemsPerPage\":10");
+            headerValue.Should().Contain("\"totalItems\":50");
         }
     }
 }
