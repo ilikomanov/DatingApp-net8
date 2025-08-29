@@ -77,5 +77,28 @@ namespace DatingApp.Tests.Controllers
             _mockLikesRepo.Verify(r => r.DeleteLike(It.IsAny<UserLike>()), Times.Never);
             _mockUow.Verify(u => u.Complete(), Times.Once);
         }
+
+        [Fact]
+        public async Task ToggleLike_RemovesExistingLike_WhenItExists_AndSaveSucceeds()
+        {
+            // Arrange
+            var targetUserId = 10;
+            var existingLike = new UserLike { SourceUserId = 5, TargetUserId = targetUserId };
+
+            _mockLikesRepo.Setup(r => r.GetUserLike(5, targetUserId))
+                .ReturnsAsync(existingLike);
+
+            _mockUow.Setup(u => u.Complete()).ReturnsAsync(true);
+
+            // Act
+            var result = await _controller.ToggleLike(targetUserId);
+
+            // Assert
+            result.Should().BeOfType<OkResult>();
+
+            _mockLikesRepo.Verify(r => r.DeleteLike(existingLike), Times.Once);
+            _mockLikesRepo.Verify(r => r.AddLike(It.IsAny<UserLike>()), Times.Never);
+            _mockUow.Verify(u => u.Complete(), Times.Once);
+        }
     }
 }
