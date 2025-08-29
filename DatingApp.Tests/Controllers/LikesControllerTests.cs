@@ -121,5 +121,22 @@ namespace DatingApp.Tests.Controllers
             _mockLikesRepo.Verify(r => r.AddLike(It.IsAny<UserLike>()), Times.Never);
             _mockUow.Verify(u => u.Complete(), Times.Once);
         }
+
+        [Fact]
+        public async Task GetCurrentUserLikeIds_ReturnsOk_WithIds()
+        {
+            // Arrange
+            var expectedIds = new List<int> { 2, 3, 4 };
+            _mockLikesRepo.Setup(r => r.GetCurrentUserLikeIds(5))
+                .ReturnsAsync(expectedIds);
+
+            // Act
+            var result = await _controller.GetCurrentUserLikeIds();
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result.Result);
+            var ids = Assert.IsAssignableFrom<IEnumerable<int>>(okResult.Value);
+            Assert.Equal(expectedIds, ids);
+        }
     }
 }
