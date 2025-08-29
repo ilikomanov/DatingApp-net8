@@ -1,6 +1,8 @@
 using System.Security.Claims;
 using API.Controllers;
+using API.DTOs;
 using API.Entities;
+using API.Helpers;
 using API.Interfaces;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
@@ -153,6 +155,36 @@ namespace DatingApp.Tests.Controllers
             var okResult = Assert.IsType<OkObjectResult>(result.Result);
             var ids = Assert.IsAssignableFrom<IEnumerable<int>>(okResult.Value);
             Assert.Empty(ids);
+        }
+
+        [Fact]
+        public async Task GetUserLikes_ReturnsOk_WithUsers()
+        {
+            // Arrange
+            var likesParams = new LikesParams { Predicate = "liked" };
+            var members = new List<MemberDto>
+            {
+                new MemberDto { Id = 1, Username = "alice" },
+                new MemberDto { Id = 2, Username = "bob" }
+            };
+
+            var pagedList = new PagedList<MemberDto>(
+                members, members.Count, 1, members.Count
+            );
+
+            _mockLikesRepo.Setup(r => r.GetUserLikes(It.IsAny<LikesParams>()))
+                .ReturnsAsync(pagedList);
+
+            // Act
+            var result = await _controller.GetUserLikes(likesParams);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result.Result);
+            var returnedUsers = Assert.IsAssignableFrom<IEnumerable<MemberDto>>(okResult.Value);
+
+            Assert.Equal(2, returnedUsers.Count());
+            Assert.Contains(returnedUsers, u => u.Username == "alice");
+            Assert.Contains(returnedUsers, u => u.Username == "bob");
         }
     }
 }
