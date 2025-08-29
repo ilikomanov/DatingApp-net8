@@ -138,5 +138,21 @@ namespace DatingApp.Tests.Controllers
             var ids = Assert.IsAssignableFrom<IEnumerable<int>>(okResult.Value);
             Assert.Equal(expectedIds, ids);
         }
+
+        [Fact]
+        public async Task GetCurrentUserLikeIds_ReturnsOk_WithEmptyList_WhenNoLikesExist()
+        {
+            // Arrange
+            _mockLikesRepo.Setup(r => r.GetCurrentUserLikeIds(5))
+                .ReturnsAsync(new List<int>()); // no likes
+
+            // Act
+            var result = await _controller.GetCurrentUserLikeIds();
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result.Result);
+            var ids = Assert.IsAssignableFrom<IEnumerable<int>>(okResult.Value);
+            Assert.Empty(ids);
+        }
     }
 }
