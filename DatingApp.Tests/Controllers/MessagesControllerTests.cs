@@ -226,6 +226,50 @@ namespace DatingApp.Tests.Controllers
         }
 
         [Fact]
+        public async Task GetMessageThread_ReturnsOK_WithMessages()
+        {
+            // Arrange
+            var currentUsername = "alice";
+            var recipientUsername = "bob";
+
+            var messages = new List<MessageDto>
+            {
+                new MessageDto
+                {
+                    Id = 1,
+                    Content = "Hello Bob",
+                    SenderUsername = "alice",
+                    RecipientUsername = "bob",
+                    SenderPhotoUrl = "alice.jpg",
+                    RecipientPhotoUrl = "bob.jpg"
+                },
+                new MessageDto
+                {
+                    Id = 2,
+                    Content = "Hi Alice",
+                    SenderUsername = "bob",
+                    RecipientUsername = "alice",
+                    SenderPhotoUrl = "bob.jpg",
+                    RecipientPhotoUrl = "alice.jpg"
+                }
+            };
+
+            _mockUow.Setup(u => u.MessageRepository.GetMessageThread(currentUsername, recipientUsername))
+                .ReturnsAsync(messages);
+
+            // Act
+            var result = await _controller.GetMessageThread(recipientUsername);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result.Result);
+            var returnedMessages = Assert.IsAssignableFrom<IEnumerable<MessageDto>>(okResult.Value);
+
+            Assert.Equal(2, returnedMessages.Count());
+            returnedMessages.Should().ContainSingle(m => m.Content == "Hello Bob" && m.SenderUsername == "alice");
+            returnedMessages.Should().ContainSingle(m => m.Content == "Hi Alice" && m.SenderUsername == "bob");
+        }
+
+        [Fact]
         public async Task GetMessageThread_ReturnsOk_WithEmptyList_WhenNoMessagesExist()
         {
             // Arrange
