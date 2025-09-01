@@ -278,5 +278,31 @@ namespace DatingApp.Tests.Controllers
             // Assert
             var forbidResult = Assert.IsType<ForbidResult>(result);
         }
+
+        [Fact]
+        public async Task DeleteMessage_ReturnsForbid_WhenUserNotSenderOrRecipient()
+        {
+            // Arrange
+            var message = new Message
+            {
+                Id = 1,
+                SenderId = 2, // not matching current user (id=1)
+                RecipientId = 3,
+                SenderUsername = "bob",
+                RecipientUsername = "charlie",
+                Content = "Hello Charlie",
+                SenderDeleted = false,
+                RecipientDeleted = false
+            };
+
+            _mockUow.Setup(u => u.MessageRepository.GetMessage(It.IsAny<int>()))
+                .ReturnsAsync(message);
+
+            // Act
+            var result = await _controller.DeleteMessage(1);
+
+            // Assert
+            var forbidResult = Assert.IsType<ForbidResult>(result);
+        }
     }
 }
