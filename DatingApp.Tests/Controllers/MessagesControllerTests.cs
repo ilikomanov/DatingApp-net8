@@ -160,26 +160,6 @@ namespace DatingApp.Tests.Controllers
             var badRequest = Assert.IsType<BadRequestObjectResult>(result.Result);
             Assert.Equal("Failed to save message", badRequest.Value);
         }
-
-        [Fact]
-        public async Task GetMessagesForUser_ReturnsEmptyList_WhenNoMessagesExist()
-        {
-            // Arrange
-            var username = "alice";
-            var messageParams = new MessageParams();
-
-            var emptyPagedList = new PagedList<MessageDto>(new List<MessageDto>(), 0, 1, 10);
-
-            _mockUow.Setup(u => u.MessageRepository.GetMessagesForUser(It.Is<MessageParams>(m => m.Username == username)))
-                .ReturnsAsync(emptyPagedList);
-
-            // Act
-            var result = await _controller.GetMessagesForUser(messageParams);
-
-            // Assert
-            var returnedMessages = Assert.IsAssignableFrom<PagedList<MessageDto>>(result.Value);
-            Assert.Empty(returnedMessages);
-        }
         
         [Fact]
         public async Task CreateMessage_ReturnsBadRequest_WhenSenderNotFound()
@@ -230,6 +210,26 @@ namespace DatingApp.Tests.Controllers
             // Assert
             var badRequest = Assert.IsType<BadRequestObjectResult>(result.Result);
             Assert.Equal("Cannot send message at this time", badRequest.Value);
+        }
+
+        [Fact]
+        public async Task GetMessagesForUser_ReturnsEmptyList_WhenNoMessagesExist()
+        {
+            // Arrange
+            var username = "alice";
+            var messageParams = new MessageParams();
+
+            var emptyPagedList = new PagedList<MessageDto>(new List<MessageDto>(), 0, 1, 10);
+
+            _mockUow.Setup(u => u.MessageRepository.GetMessagesForUser(It.Is<MessageParams>(m => m.Username == username)))
+                .ReturnsAsync(emptyPagedList);
+
+            // Act
+            var result = await _controller.GetMessagesForUser(messageParams);
+
+            // Assert
+            var returnedMessages = Assert.IsAssignableFrom<PagedList<MessageDto>>(result.Value);
+            Assert.Empty(returnedMessages);
         }
 
         [Fact]
@@ -489,6 +489,21 @@ namespace DatingApp.Tests.Controllers
 
             // Assert
             var forbidResult = Assert.IsType<ForbidResult>(result);
+        }
+
+        [Fact]
+        public async Task DeleteMessage_ReturnsBadRequest_WhenMessageDoesNotExist()
+        {
+            // Arrange
+            _mockUow.Setup(u => u.MessageRepository.GetMessage(It.IsAny<int>()))
+                .ReturnsAsync((Message?)null);
+
+            // Act
+            var result = await _controller.DeleteMessage(99);
+
+            // Assert
+            var badRequest = Assert.IsType<BadRequestObjectResult>(result);
+            Assert.Equal("Cannot delete this message", badRequest.Value);
         }
 
         [Fact]
