@@ -372,6 +372,43 @@ namespace DatingApp.Tests.Controllers
         }
 
         [Fact]
+        public async Task DeleteMessage_DoesNotCallComplete_WhenUnauthorized()
+        {
+            // Arrange
+            var message = new Message
+            {
+                Id = 1,
+                SenderId = 2,
+                RecipientId = 3,
+                SenderUsername = "bob",
+                RecipientUsername = "charlie",
+                Content = "Unauthorized test"
+            };
+
+            _mockUow.Setup(u => u.MessageRepository.GetMessage(1))
+                .ReturnsAsync(message);
+
+            // current user = alice (id=1), not sender or recipient
+            var user = new ClaimsPrincipal(new ClaimsIdentity(new[]
+            {
+                new Claim(ClaimTypes.Name, "alice"),
+                new Claim(ClaimTypes.NameIdentifier, "1")
+            }, "mock"));
+
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            // Act
+            var result = await _controller.DeleteMessage(1);
+
+            // Assert
+            Assert.IsType<ForbidResult>(result);
+            _mockUow.Verify(u => u.Complete(), Times.Never); // ensure DB save never called
+        }
+
+        [Fact]
         public async Task DeleteMessage_ReturnsUnauthorized_WhenUserNotSenderOrRecipient()
         {
             // Arrange
