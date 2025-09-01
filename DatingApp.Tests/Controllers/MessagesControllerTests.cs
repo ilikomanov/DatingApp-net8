@@ -535,6 +535,34 @@ namespace DatingApp.Tests.Controllers
         }
 
         [Fact]
+        public async Task DeleteMessage_ReturnsBadRequest_WhenBothDeletedButCompleteFails()
+        {
+            // Arrange
+            var message = new Message
+            {
+                Id = 1,
+                SenderId = 1,        // current user
+                RecipientId = 2,
+                SenderUsername = "alice",
+                RecipientUsername = "bob",
+                Content = "Hello Bob",
+                SenderDeleted = true,   // already deleted by sender
+                RecipientDeleted = true  // already deleted by recipient
+            };
+
+            _mockUow.Setup(u => u.MessageRepository.GetMessage(1))
+                .ReturnsAsync(message);
+            _mockUow.Setup(u => u.Complete()).ReturnsAsync(false); // simulate failure
+
+            // Act
+            var result = await _controller.DeleteMessage(1);
+
+            // Assert
+            var badRequest = Assert.IsType<BadRequestObjectResult>(result);
+            Assert.Equal("Problem deleting the message", badRequest.Value);
+        }
+
+        [Fact]
         public async Task DeleteMessage_SetsSenderDeleted_WhenCurrentUserIsSender()
         {
             // Arrange
