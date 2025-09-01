@@ -122,6 +122,27 @@ namespace DatingApp.Tests.Controllers
         }
 
         [Fact]
+        public async Task CreateMessage_ReturnsBadRequest_WhenSenderNotFound()
+        {
+            // Arrange
+            var dto = new CreateMessageDto
+            {
+                RecipientUsername = "bob",
+                Content = "Hello"
+            };
+
+            _mockUow.Setup(u => u.UserRepository.GetUserByUsernameAsync("alice"))
+                .ReturnsAsync((AppUser?)null); // sender not found
+
+            // Act
+            var result = await _controller.CreateMessage(dto);
+
+            // Assert
+            var badRequest = Assert.IsType<BadRequestObjectResult>(result.Result);
+            Assert.Equal("Cannot send message at this time", badRequest.Value);
+        }
+
+        [Fact]
         public async Task CreateMessage_ReturnsBadRequest_WhenRecipientNotFound()
         {
             // Arrange
