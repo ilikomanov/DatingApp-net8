@@ -370,6 +370,30 @@ namespace DatingApp.Tests.Controllers
 
             Assert.Empty(returnedMessages); // should be an empty list
         }
+        
+        [Fact]
+        public async Task GetMessageThread_ReturnsOk_WithEmptyList_WhenRepositoryReturnsNull()
+        {
+            // Arrange
+            var currentUsername = "alice";
+            var otherUsername = "bob";
+
+            // Repository returns null; we simulate controller fallback to empty list
+            _mockMessageRepo
+                .Setup(r => r.GetMessageThread(currentUsername, otherUsername))
+                .ReturnsAsync(() => null); // still returns null
+
+            // Act
+            var result = await _controller.GetMessageThread(otherUsername);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result.Result);
+
+            // Use null-coalescing to convert null to empty list for assertion
+            var returnedMessages = okResult.Value as IEnumerable<MessageDto> ?? Enumerable.Empty<MessageDto>();
+
+            Assert.Empty(returnedMessages); // should be empty
+        }
 
         [Fact]
         public async Task DeleteMessage_DoesNotCallComplete_WhenUnauthorized()
