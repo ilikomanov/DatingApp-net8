@@ -245,5 +245,38 @@ namespace DatingApp.Tests.Controllers
 
             Assert.Empty(returnedMessages); // should be an empty list
         }
+
+        [Fact]
+        public async Task DeleteMessage_ReturnsUnauthorized_WhenUserNotSenderOrRecipient()
+        {
+            // Arrange
+            var message = new Message
+            {
+                Id = 1,
+                SenderUsername = "alice",
+                RecipientUsername = "bob",
+                Content = "Hi Bob",
+            };
+
+            _mockMessageRepo.Setup(r => r.GetMessage(1)).ReturnsAsync(message);
+
+            // Controller is set with user = "charlie" (not sender or recipient)
+            var user = new ClaimsPrincipal(new ClaimsIdentity(new[]
+            {
+                new Claim(ClaimTypes.Name, "charlie"),
+                new Claim(ClaimTypes.NameIdentifier, "3")
+            }, "mock"));
+
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            // Act
+            var result = await _controller.DeleteMessage(1);
+
+            // Assert
+            var forbidResult = Assert.IsType<ForbidResult>(result);
+        }
     }
 }
