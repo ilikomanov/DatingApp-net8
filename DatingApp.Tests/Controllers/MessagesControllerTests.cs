@@ -332,5 +332,61 @@ namespace DatingApp.Tests.Controllers
             Assert.IsType<OkResult>(result);
             Assert.True(message.SenderDeleted);
         }
+
+        [Fact]
+        public async Task DeleteMessage_SetsRecipientDeleted_WhenCurrentUserIsRecipient()
+        {
+            // Arrange
+            var message = new Message
+            {
+                Id = 1,
+                SenderId = 2,
+                RecipientId = 1, // current user
+                SenderUsername = "bob",
+                RecipientUsername = "alice",
+                Content = "Hello Alice",
+                SenderDeleted = false,
+                RecipientDeleted = false
+            };
+
+            _mockUow.Setup(u => u.MessageRepository.GetMessage(1))
+                .ReturnsAsync(message);
+            _mockUow.Setup(u => u.Complete()).ReturnsAsync(true);
+
+            // Act
+            var result = await _controller.DeleteMessage(1);
+
+            // Assert
+            Assert.IsType<OkResult>(result);
+            Assert.True(message.RecipientDeleted);
+        }
+
+        [Fact]
+        public async Task DeleteMessage_RemovesMessage_WhenBothSenderAndRecipientDeleted()
+        {
+            // Arrange
+            var message = new Message
+            {
+                Id = 1,
+                SenderId = 1, // current user
+                RecipientId = 2,
+                SenderUsername = "alice",
+                RecipientUsername = "bob",
+                Content = "Hello Bob",
+                SenderDeleted = true,   // already deleted by sender
+                RecipientDeleted = true
+            };
+
+            _mockUow.Setup(u => u.MessageRepository.GetMessage(1))
+                .ReturnsAsync(message);
+            _mockUow.Setup(u => u.Complete()).ReturnsAsync(true);
+
+            // Act
+            var result = await _controller.DeleteMessage(1);
+
+            // Assert
+            Assert.IsType<OkResult>(result);
+            _mockUow.Verify(u => u.MessageRepository.DeleteMessage(message), Times.Once);
+        }
     }
 }
