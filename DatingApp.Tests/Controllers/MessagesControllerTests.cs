@@ -245,6 +245,5 @@ namespace DatingApp.Tests.Controllers
 
             Assert.Empty(returnedMessages); // should be an empty list
         }
-
     }
 }
