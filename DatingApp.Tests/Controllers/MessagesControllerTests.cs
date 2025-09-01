@@ -122,6 +122,46 @@ namespace DatingApp.Tests.Controllers
         }
 
         [Fact]
+        public async Task CreateMessage_ReturnsBadRequest_WhenSaveFails()
+        {
+            // Arrange
+            var dto = new CreateMessageDto
+            {
+                RecipientUsername = "bob",
+                Content = "Hello"
+            };
+
+            var sender = new AppUser
+            {
+                UserName = "alice",
+                Gender = "female",
+                KnownAs = "Alice",
+                City = "Paris",
+                Country = "France"
+            };
+
+            var recipient = new AppUser
+            {
+                UserName = "bob",
+                Gender = "male",
+                KnownAs = "Bob",
+                City = "London",
+                Country = "UK"
+            };
+            
+            _mockUow.Setup(u => u.UserRepository.GetUserByUsernameAsync("alice")).ReturnsAsync(sender);
+            _mockUow.Setup(u => u.UserRepository.GetUserByUsernameAsync("bob")).ReturnsAsync(recipient);
+            _mockUow.Setup(u => u.Complete()).ReturnsAsync(false); // saving fails
+
+            // Act
+            var result = await _controller.CreateMessage(dto);
+
+            // Assert
+            var badRequest = Assert.IsType<BadRequestObjectResult>(result.Result);
+            Assert.Equal("Failed to save message", badRequest.Value);
+        }
+        
+        [Fact]
         public async Task CreateMessage_ReturnsBadRequest_WhenSenderNotFound()
         {
             // Arrange
