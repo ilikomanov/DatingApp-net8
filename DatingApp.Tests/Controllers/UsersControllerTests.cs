@@ -1326,6 +1326,58 @@ namespace DatingApp.Tests.Controllers
         }
 
         [Fact]
+        public async Task AddPhoto_ReturnsCreatedAtAction_WhenUploadSucceeds()
+        {
+            // Arrange
+            var testUser = new AppUser
+            {
+                UserName = "alice",
+                KnownAs = "Alice",
+                Gender = "Female",
+                City = "TestCity",
+                Country = "TestCountry",
+                Photos = new List<Photo>()
+            };
+
+            _mockUnitOfWork.Setup(u => u.UserRepository.GetUserByUsernameAsync(It.IsAny<string>()))
+                .ReturnsAsync(testUser);
+
+            var uploadedPhoto = new ImageUploadResult
+            {
+                SecureUrl = new System.Uri("http://example.com/photo.jpg"),
+                PublicId = "photo123"
+            };
+
+            _mockPhotoService.Setup(s => s.AddPhotoAsync(It.IsAny<IFormFile>()))
+                .ReturnsAsync(uploadedPhoto);
+
+            _mockUnitOfWork.Setup(u => u.Complete())
+                .ReturnsAsync(true);
+
+            var photoDto = new PhotoDto
+            {
+                Url = uploadedPhoto.SecureUrl.AbsoluteUri,
+                PublicId = uploadedPhoto.PublicId
+            };
+
+            // Mock AutoMapper
+            _mockMapper.Setup(m => m.Map<PhotoDto>(It.IsAny<Photo>()))
+                .Returns(photoDto);
+
+            var file = new Mock<IFormFile>();
+            file.Setup(f => f.Length).Returns(100);
+
+            // Act
+            var result = await _controller.AddPhoto(file.Object);
+
+            // Assert
+            var createdResult = Assert.IsType<CreatedAtActionResult>(result.Result);
+            var returnValue = Assert.IsType<PhotoDto>(createdResult.Value);
+            Assert.Equal("http://example.com/photo.jpg", returnValue.Url);
+            Assert.Equal("photo123", returnValue.PublicId);
+        }
+
+        [Fact]
         public async Task AddPhoto_ReturnsCreatedAtAction_WhenPhotoAddedSuccessfully()
         {
             // Arrange
