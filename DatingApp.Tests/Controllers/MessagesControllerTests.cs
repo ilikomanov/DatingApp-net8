@@ -295,6 +295,33 @@ namespace DatingApp.Tests.Controllers
         }
 
         [Fact]
+        public async Task GetMessagesForUser_EmptyPage_ReturnsEmptyListAndPagination()
+        {
+            // Arrange
+            var username = "alice";
+            var messageParams = new MessageParams { PageNumber = 1, PageSize = 10 };
+            var emptyPagedList = new PagedList<MessageDto>(new List<MessageDto>(), count: 0, pageNumber: 1, pageSize: 10);
+
+            _mockUow.Setup(u => u.MessageRepository.GetMessagesForUser(It.Is<MessageParams>(m => m.Username == username)))
+                .ReturnsAsync(emptyPagedList);
+
+            // Act
+            var result = await _controller.GetMessagesForUser(messageParams);
+
+            // Assert
+            var returnedMessages = Assert.IsAssignableFrom<PagedList<MessageDto>>(result.Value);
+            Assert.Empty(returnedMessages);
+
+            Assert.True(_controller.Response.Headers.ContainsKey("Pagination"));
+
+            var header = _controller.Response.Headers["Pagination"].ToString();
+            header.Should().Contain("\"currentPage\":1");
+            header.Should().Contain("\"itemsPerPage\":10");
+            header.Should().Contain("\"totalItems\":0");
+            header.Should().Contain("\"totalPages\":0");
+        }
+
+        [Fact]
         public async Task GetMessageThread_ReturnsOk_WithMessages()
         {
             // Arrange
