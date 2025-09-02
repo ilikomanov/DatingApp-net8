@@ -338,7 +338,7 @@ namespace DatingApp.Tests.Controllers
             // Assert
             result.Should().BeOfType<NoContentResult>();
         }
-        
+
         [Fact]
         public async Task UpdateUser_ReturnsBadRequest_WhenModelStateIsInvalid()
         {
@@ -365,7 +365,7 @@ namespace DatingApp.Tests.Controllers
             // Assert
             var badRequest = Assert.IsType<BadRequestObjectResult>(result);
         }
-        
+
         [Fact]
         public async Task UpdateUser_ReturnsBadRequest_WhenDtoIsInvalid()
         {
@@ -895,7 +895,7 @@ namespace DatingApp.Tests.Controllers
             var badRequest = Assert.IsType<BadRequestObjectResult>(result);
             Assert.Equal("Could not find user", badRequest.Value);
         }
-        
+
         [Fact]
         public async Task AddPhoto_ReturnsBadRequest_WhenPhotoServiceFails()
         {
@@ -981,7 +981,7 @@ namespace DatingApp.Tests.Controllers
             var badRequest = Assert.IsType<BadRequestObjectResult>(result.Result);
             Assert.Equal("upload failed", badRequest.Value);
         }
-        
+
         [Fact]
         public async Task AddPhoto_ReturnsBadRequest_WhenUnitOfWorkFails()
         {
@@ -1559,6 +1559,35 @@ namespace DatingApp.Tests.Controllers
             result.Should().BeOfType<OkResult>();
             appUser.Photos.Should().BeEmpty();
             _mockUnitOfWork.Verify(u => u.Complete(), Times.Once);
+        }
+
+        [Fact]
+        public async Task DeletePhoto_ReturnsNotFound_WhenPhotoDoesNotExist()
+        {
+            // Arrange
+            var testUser = new AppUser
+            {
+                UserName = "alice",
+                KnownAs = "Alice",
+                Gender = "Female",
+                City = "TestCity",
+                Country = "TestCountry",
+                Photos = new List<Photo>()
+            };
+
+            _mockUnitOfWork.Setup(u => u.UserRepository.GetUserByUsernameAsync(It.IsAny<string>()))
+                .ReturnsAsync(testUser);
+                
+            int photoId = 999;
+
+            _mockUnitOfWork.Setup(u => u.PhotoRepository.GetPhotoById(photoId))
+                .ReturnsAsync((Photo?)null); // simulate photo not found
+
+            // Act
+            var result = await _controller.DeletePhoto(photoId);
+
+            // Assert
+            result.Should().BeOfType<BadRequestObjectResult>();
         }
     }
 }
