@@ -816,6 +816,32 @@ namespace DatingApp.Tests.Controllers
         }
 
         [Fact]
+        public async Task UpdateUser_ReturnsBadRequest_WhenUsernameMismatch()
+        {
+            // Arrange
+            var dto = new MemberUpdateDto { Introduction = "Hello mismatch" };
+
+            var user = new AppUser
+            {
+                UserName = "bob",
+                KnownAs = "Test",
+                Gender = "Male",
+                City = "TestCity",
+                Country = "TestCountry"
+            }; // mismatch with "alice"
+
+            _mockUnitOfWork.Setup(u => u.UserRepository.GetUserByUsernameAsync("alice"))
+                .ReturnsAsync(user);
+
+            // Act
+            var result = await _controller.UpdateUser(dto);
+
+            // Assert
+            var badRequest = Assert.IsType<BadRequestObjectResult>(result);
+            Assert.Equal("Could not find user", badRequest.Value);
+        }
+
+        [Fact]
         public async Task AddPhoto_ReturnsBadRequest_WhenPhotoServiceFails()
         {
             // Arrange
