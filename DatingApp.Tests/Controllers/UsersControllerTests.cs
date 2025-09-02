@@ -340,6 +340,34 @@ namespace DatingApp.Tests.Controllers
         }
 
         [Fact]
+        public async Task UpdateUser_ReturnsBadRequest_WhenDtoIsInvalid()
+        {
+            // Arrange
+            var testUser = new AppUser
+            {
+                UserName = "alice",
+                KnownAs = "Alice",
+                Gender = "Female",
+                City = "TestCity",
+                Country = "TestCountry",
+                Photos = new List<Photo>()
+            };
+
+            _mockUnitOfWork.Setup(u => u.UserRepository.GetUserByUsernameAsync(It.IsAny<string>()))
+                .ReturnsAsync(testUser);
+
+            _controller.ModelState.AddModelError("Introduction", "Required");
+
+            var dto = new MemberUpdateDto { Introduction = null }; // invalid
+
+            // Act
+            var result = await _controller.UpdateUser(dto);
+
+            // Assert
+            var badRequest = Assert.IsType<BadRequestObjectResult>(result);
+        }
+
+        [Fact]
         public async Task UpdateUser_ReturnsBadRequest_WhenUserNotFound()
         {
             // Arrange
@@ -1004,9 +1032,9 @@ namespace DatingApp.Tests.Controllers
             {
                 UserName = username,
                 KnownAs = "Test",
-                        Gender = "Male",
-                        City = "TestCity",
-                        Country = "TestCountry",
+                Gender = "Male",
+                City = "TestCity",
+                Country = "TestCountry",
                 Photos = new List<Photo>()
             };
 
