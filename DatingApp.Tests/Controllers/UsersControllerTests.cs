@@ -1577,7 +1577,7 @@ namespace DatingApp.Tests.Controllers
 
             _mockUnitOfWork.Setup(u => u.UserRepository.GetUserByUsernameAsync(It.IsAny<string>()))
                 .ReturnsAsync(testUser);
-                
+
             int photoId = 999;
 
             _mockUnitOfWork.Setup(u => u.PhotoRepository.GetPhotoById(photoId))
@@ -1588,6 +1588,40 @@ namespace DatingApp.Tests.Controllers
 
             // Assert
             result.Should().BeOfType<BadRequestObjectResult>();
+        }
+        
+        [Fact]
+        public async Task DeletePhoto_ReturnsBadRequest_WhenCloudinaryDeleteFails()
+        {
+            // Arrange
+            var photo = new Photo { Id = 5, PublicId = "photo123", Url = "http://example.com/photo.jpg" };
+            var testUser = new AppUser
+            {
+                UserName = "alice",
+                KnownAs = "Alice",
+                Gender = "Female",
+                City = "TestCity",
+                Country = "TestCountry",
+                Photos = new List<Photo> { photo }
+            };
+
+            _mockUnitOfWork.Setup(u => u.UserRepository.GetUserByUsernameAsync(It.IsAny<string>()))
+                .ReturnsAsync(testUser);
+
+            // When PhotoRepository.GetPhotoById(photo.Id) is called, return our photo
+            _mockUnitOfWork.Setup(u => u.PhotoRepository.GetPhotoById(photo.Id))
+                .ReturnsAsync(photo);
+
+            // Simulate Cloudinary failure
+            _mockPhotoService.Setup(s => s.DeletePhotoAsync(photo.PublicId))
+                .ReturnsAsync(new DeletionResult { Error = new Error { Message = "Cloudinary error" } });
+
+            // Act
+            var result = await _controller.DeletePhoto(photo.Id);
+
+            // Assert
+            var badRequest = Assert.IsType<BadRequestObjectResult>(result);
+            badRequest.Value.Should().Be("Cloudinary error");
         }
     }
 }
