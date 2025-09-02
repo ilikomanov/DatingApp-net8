@@ -892,6 +892,42 @@ namespace DatingApp.Tests.Controllers
         }
 
         [Fact]
+        public async Task AddPhoto_ReturnsBadRequest_WhenUploadFails()
+        {
+            // Arrange
+            var testUser = new AppUser
+            {
+                UserName = "alice",
+                KnownAs = "Test",
+                Gender = "Female",
+                City = "TestCity",
+                Country = "TestCountry",
+                Photos = new List<Photo>()
+            };
+
+            _mockUnitOfWork.Setup(u => u.UserRepository.GetUserByUsernameAsync(It.IsAny<string>()))
+                .ReturnsAsync(testUser);
+
+            var failedResult = new ImageUploadResult
+            {
+                Error = new Error { Message = "upload failed" }
+            };
+
+            _mockPhotoService.Setup(s => s.AddPhotoAsync(It.IsAny<IFormFile>()))
+                .ReturnsAsync(failedResult);
+
+            var file = new Mock<IFormFile>();
+            file.Setup(f => f.Length).Returns(100);
+
+            // Act
+            var result = await _controller.AddPhoto(file.Object);
+
+            // Assert
+            var badRequest = Assert.IsType<BadRequestObjectResult>(result.Result);
+            Assert.Equal("upload failed", badRequest.Value);
+        }
+
+        [Fact]
         public async Task AddPhoto_ReturnsCreatedAtAction_WhenSuccessful()
         {
             // Arrange
