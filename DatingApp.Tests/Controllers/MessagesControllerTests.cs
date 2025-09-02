@@ -213,6 +213,39 @@ namespace DatingApp.Tests.Controllers
         }
 
         [Fact]
+        public async Task GetMessagesForUser_AddsPaginationHeader_WhenMessagesExist()
+        {
+            // Arrange
+            var username = "alice";
+            var messageParams = new MessageParams { PageNumber = 1, PageSize = 2 };
+            var messages = new List<MessageDto>
+            {
+                new MessageDto { Id = 1, Content = "Hello", SenderUsername = "alice", RecipientUsername = "bob",SenderPhotoUrl="s.jpg", RecipientPhotoUrl="r.jpg"  },
+                new MessageDto { Id = 2, Content = "Hi", SenderUsername = "bob", RecipientUsername = "alice",SenderPhotoUrl="s.jpg", RecipientPhotoUrl="r.jpg"  }
+            };
+
+            var pagedList = new PagedList<MessageDto>(messages, count: 5, pageNumber: 1, pageSize: 2);
+
+            _mockUow.Setup(u => u.MessageRepository.GetMessagesForUser(It.Is<MessageParams>(m => m.Username == username)))
+                .ReturnsAsync(pagedList);
+
+            // Act
+            var result = await _controller.GetMessagesForUser(messageParams);
+
+            // Assert
+            var returnedMessages = Assert.IsAssignableFrom<PagedList<MessageDto>>(result.Value);
+            Assert.Equal(2, returnedMessages.Count);
+
+            Assert.True(_controller.Response.Headers.ContainsKey("Pagination"));
+
+            var header = _controller.Response.Headers["Pagination"].ToString();
+            header.Should().Contain("\"currentPage\":1");
+            header.Should().Contain("\"itemsPerPage\":2");
+            header.Should().Contain("\"totalItems\":5");
+            header.Should().Contain("\"totalPages\":3"); // 5 messages / page size 2 → 3 pages
+        }
+
+        [Fact]
         public async Task GetMessagesForUser_ReturnsEmptyList_WhenNoMessagesExist()
         {
             // Arrange
