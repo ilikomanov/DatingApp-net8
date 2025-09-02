@@ -799,6 +799,23 @@ namespace DatingApp.Tests.Controllers
         }
 
         [Fact]
+        public async Task UpdateUser_ReturnsNotFound_WhenUserDoesNotExist()
+        {
+            // Arrange
+            _mockUnitOfWork.Setup(u => u.UserRepository.GetUserByUsernameAsync("alice"))
+                .ReturnsAsync((AppUser?)null);
+
+            var dto = new MemberUpdateDto { Introduction = "Hello world" };
+
+            // Act
+            var result = await _controller.UpdateUser(dto);
+
+            // Assert
+            var badRequest = Assert.IsType<BadRequestObjectResult>(result);
+            Assert.Equal("Could not find user", badRequest.Value);
+        }
+
+        [Fact]
         public async Task AddPhoto_ReturnsBadRequest_WhenPhotoServiceFails()
         {
             // Arrange
