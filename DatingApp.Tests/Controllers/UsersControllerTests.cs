@@ -338,7 +338,34 @@ namespace DatingApp.Tests.Controllers
             // Assert
             result.Should().BeOfType<NoContentResult>();
         }
+        
+        [Fact]
+        public async Task UpdateUser_ReturnsBadRequest_WhenModelStateIsInvalid()
+        {
+            // Arrange
+            _controller.ModelState.AddModelError("Introduction", "Required");
 
+            var dto = new MemberUpdateDto { Introduction = null }; // invalid
+
+            var testUser = new AppUser
+            {
+                UserName = "alice",
+                KnownAs = "Alice",
+                Gender = "Female",
+                City = "TestCity",
+                Country = "TestCountry"
+            };
+
+            _mockUnitOfWork.Setup(u => u.UserRepository.GetUserByUsernameAsync(It.IsAny<string>()))
+                .ReturnsAsync(testUser);
+
+            // Act
+            var result = await _controller.UpdateUser(dto);
+
+            // Assert
+            var badRequest = Assert.IsType<BadRequestObjectResult>(result);
+        }
+        
         [Fact]
         public async Task UpdateUser_ReturnsBadRequest_WhenDtoIsInvalid()
         {
@@ -868,7 +895,7 @@ namespace DatingApp.Tests.Controllers
             var badRequest = Assert.IsType<BadRequestObjectResult>(result);
             Assert.Equal("Could not find user", badRequest.Value);
         }
-
+        
         [Fact]
         public async Task AddPhoto_ReturnsBadRequest_WhenPhotoServiceFails()
         {
@@ -954,197 +981,7 @@ namespace DatingApp.Tests.Controllers
             var badRequest = Assert.IsType<BadRequestObjectResult>(result.Result);
             Assert.Equal("upload failed", badRequest.Value);
         }
-
-        [Fact]
-        public async Task AddPhoto_ReturnsCreatedAtAction_WhenSuccessful()
-        {
-            // Arrange
-            var mockFormFile = new Mock<IFormFile>();
-
-            var currentUsername = "testuser";
-            var mockHttpContext = new Mock<HttpContext>();
-            var mockClaimsPrincipal = new ClaimsPrincipal(
-                new ClaimsIdentity(new[]
-                {
-                    new Claim(ClaimTypes.Name, currentUsername)
-                }, "mock")
-            );
-
-            mockHttpContext.Setup(c => c.User).Returns(mockClaimsPrincipal);
-            _controller.ControllerContext = new ControllerContext
-            {
-                HttpContext = mockHttpContext.Object
-            };
-
-            var appUser = new AppUser
-            {
-                UserName = "testuser",
-                KnownAs = "Test",
-                Gender = "Male",
-                City = "TestCity",
-                Country = "TestCountry",
-                Photos = new List<Photo>()
-            };
-
-            _mockUnitOfWork.Setup(u => u.UserRepository.GetUserByUsernameAsync(currentUsername))
-                .ReturnsAsync(appUser);
-
-            // Mock successful photo upload
-            _mockPhotoService.Setup(p => p.AddPhotoAsync(It.IsAny<IFormFile>()))
-                .ReturnsAsync(new ImageUploadResult
-                {
-                    SecureUrl = new Uri("http://test.com/photo.jpg"),
-                    PublicId = "public123"
-                });
-
-            _mockUnitOfWork.Setup(u => u.Complete()).ReturnsAsync(true);
-
-            // Mock mapper so PhotoDto is not null
-            _mockMapper.Setup(m => m.Map<PhotoDto>(It.IsAny<Photo>()))
-                .Returns((Photo p) => new PhotoDto
-                {
-                    Id = p.Id,
-                    Url = p.Url,
-                    IsMain = p.IsMain,
-                    IsApproved = p.IsApproved
-                });
-
-            // Act
-            var result = await _controller.AddPhoto(mockFormFile.Object);
-
-            // Assert
-            result.Result.Should().BeOfType<CreatedAtActionResult>();
-
-            var createdResult = result.Result as CreatedAtActionResult;
-            createdResult!.ActionName.Should().Be(nameof(_controller.GetUser));
-            createdResult.Value.Should().BeOfType<PhotoDto>();
-
-            var photoDto = createdResult.Value as PhotoDto;
-            photoDto!.Url.Should().Be("http://test.com/photo.jpg");
-        }
-
-        [Fact]
-        public async Task AddPhoto_ReturnsCreatedAtAction_WhenPhotoAddedSuccessfully()
-        {
-            // Arrange
-            var username = "testuser";
-            var appUser = new AppUser
-            {
-                UserName = username,
-                KnownAs = "Test",
-                Gender = "Male",
-                City = "TestCity",
-                Country = "TestCountry",
-                Photos = new List<Photo>()
-            };
-
-            _mockUnitOfWork.Setup(u => u.UserRepository.GetUserByUsernameAsync(username))
-                .ReturnsAsync(appUser);
-
-            var uploadResult = new ImageUploadResult
-            {
-                SecureUrl = new Uri("http://test.com/photo.jpg"),
-                PublicId = "public123"
-            };
-
-            _mockPhotoService.Setup(p => p.AddPhotoAsync(It.IsAny<IFormFile>()))
-                .ReturnsAsync(uploadResult);
-
-            _mockUnitOfWork.Setup(u => u.Complete())
-                .ReturnsAsync(true);
-
-            var mockHttpContext = new Mock<HttpContext>();
-            var mockClaimsPrincipal = new ClaimsPrincipal(
-                new ClaimsIdentity(new[]
-                {
-                    new Claim(ClaimTypes.Name, username)
-                }, "mock")
-            );
-            mockHttpContext.Setup(c => c.User).Returns(mockClaimsPrincipal);
-
-            _controller.ControllerContext = new ControllerContext
-            {
-                HttpContext = mockHttpContext.Object
-            };
-
-            var fileMock = new Mock<IFormFile>();
-            var content = "fake image content";
-            var fileName = "test.jpg";
-            var ms = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(content));
-            fileMock.Setup(_ => _.OpenReadStream()).Returns(ms);
-            fileMock.Setup(_ => _.FileName).Returns(fileName);
-            fileMock.Setup(_ => _.Length).Returns(ms.Length);
-
-            // Act
-            var result = await _controller.AddPhoto(fileMock.Object!);
-
-            // Assert
-            var createdAtAction = result.Result as CreatedAtActionResult;
-            createdAtAction.Should().NotBeNull();
-            createdAtAction!.ActionName.Should().Be(nameof(_controller.GetUser));
-            _mockUnitOfWork.Verify(u => u.Complete(), Times.Once);
-        }
-
-        [Fact]
-        public async Task AddPhoto_ReturnsCreatedAtRoute_WhenPhotoAddedSuccessfully()
-        {
-            // Arrange
-            var currentUsername = "testuser";
-            var mockHttpContext = new Mock<HttpContext>();
-            var mockClaimsPrincipal = new ClaimsPrincipal(
-                new ClaimsIdentity(new[]
-                {
-                    new Claim(ClaimTypes.Name, currentUsername)
-                }, "mock")
-            );
-            mockHttpContext.Setup(c => c.User).Returns(mockClaimsPrincipal);
-
-            _controller.ControllerContext = new ControllerContext
-            {
-                HttpContext = mockHttpContext.Object
-            };
-
-            var appUser = new AppUser
-            {
-                UserName = currentUsername,
-                KnownAs = "Test",
-                Gender = "Male",
-                City = "TestCity",
-                Country = "TestCountry",
-                Photos = new List<Photo>()
-            };
-
-            _mockUnitOfWork.Setup(u => u.UserRepository.GetUserByUsernameAsync(currentUsername))
-                .ReturnsAsync(appUser);
-
-            var fileMock = new Mock<IFormFile>();
-
-            // Mock successful photo upload
-            _mockPhotoService.Setup(p => p.AddPhotoAsync(It.IsAny<IFormFile>()))
-                .ReturnsAsync(new ImageUploadResult
-                {
-                    SecureUrl = new Uri("http://photo.url"),
-                    PublicId = "public123"
-                });
-
-            _mockUnitOfWork.Setup(u => u.Complete()).ReturnsAsync(true);
-
-            // Act
-            var result = await _controller.AddPhoto(fileMock.Object);
-
-            // Assert
-            var createdAtActionResult = result.Result as CreatedAtActionResult;
-            createdAtActionResult.Should().NotBeNull();
-            createdAtActionResult.ActionName.Should().Be(nameof(_controller.GetUser));
-            createdAtActionResult.RouteValues["username"].Should().Be(currentUsername);
-
-            appUser.Photos.Should().ContainSingle();
-            appUser.Photos.First().Url.Should().Be("http://photo.url/"); // matches mocked SecureUrl
-
-            _mockUnitOfWork.Verify(u => u.Complete(), Times.Once);
-            _mockPhotoService.Verify(s => s.AddPhotoAsync(fileMock.Object), Times.Once);
-        }
-
+        
         [Fact]
         public async Task AddPhoto_ReturnsBadRequest_WhenUnitOfWorkFails()
         {
@@ -1418,6 +1255,196 @@ namespace DatingApp.Tests.Controllers
             badRequest!.Value.Should().Be("Problem adding photo");
 
             _mockUnitOfWork.Verify(u => u.Complete(), Times.Once);
+        }
+
+        [Fact]
+        public async Task AddPhoto_ReturnsCreatedAtAction_WhenSuccessful()
+        {
+            // Arrange
+            var mockFormFile = new Mock<IFormFile>();
+
+            var currentUsername = "testuser";
+            var mockHttpContext = new Mock<HttpContext>();
+            var mockClaimsPrincipal = new ClaimsPrincipal(
+                new ClaimsIdentity(new[]
+                {
+                    new Claim(ClaimTypes.Name, currentUsername)
+                }, "mock")
+            );
+
+            mockHttpContext.Setup(c => c.User).Returns(mockClaimsPrincipal);
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = mockHttpContext.Object
+            };
+
+            var appUser = new AppUser
+            {
+                UserName = "testuser",
+                KnownAs = "Test",
+                Gender = "Male",
+                City = "TestCity",
+                Country = "TestCountry",
+                Photos = new List<Photo>()
+            };
+
+            _mockUnitOfWork.Setup(u => u.UserRepository.GetUserByUsernameAsync(currentUsername))
+                .ReturnsAsync(appUser);
+
+            // Mock successful photo upload
+            _mockPhotoService.Setup(p => p.AddPhotoAsync(It.IsAny<IFormFile>()))
+                .ReturnsAsync(new ImageUploadResult
+                {
+                    SecureUrl = new Uri("http://test.com/photo.jpg"),
+                    PublicId = "public123"
+                });
+
+            _mockUnitOfWork.Setup(u => u.Complete()).ReturnsAsync(true);
+
+            // Mock mapper so PhotoDto is not null
+            _mockMapper.Setup(m => m.Map<PhotoDto>(It.IsAny<Photo>()))
+                .Returns((Photo p) => new PhotoDto
+                {
+                    Id = p.Id,
+                    Url = p.Url,
+                    IsMain = p.IsMain,
+                    IsApproved = p.IsApproved
+                });
+
+            // Act
+            var result = await _controller.AddPhoto(mockFormFile.Object);
+
+            // Assert
+            result.Result.Should().BeOfType<CreatedAtActionResult>();
+
+            var createdResult = result.Result as CreatedAtActionResult;
+            createdResult!.ActionName.Should().Be(nameof(_controller.GetUser));
+            createdResult.Value.Should().BeOfType<PhotoDto>();
+
+            var photoDto = createdResult.Value as PhotoDto;
+            photoDto!.Url.Should().Be("http://test.com/photo.jpg");
+        }
+
+        [Fact]
+        public async Task AddPhoto_ReturnsCreatedAtAction_WhenPhotoAddedSuccessfully()
+        {
+            // Arrange
+            var username = "testuser";
+            var appUser = new AppUser
+            {
+                UserName = username,
+                KnownAs = "Test",
+                Gender = "Male",
+                City = "TestCity",
+                Country = "TestCountry",
+                Photos = new List<Photo>()
+            };
+
+            _mockUnitOfWork.Setup(u => u.UserRepository.GetUserByUsernameAsync(username))
+                .ReturnsAsync(appUser);
+
+            var uploadResult = new ImageUploadResult
+            {
+                SecureUrl = new Uri("http://test.com/photo.jpg"),
+                PublicId = "public123"
+            };
+
+            _mockPhotoService.Setup(p => p.AddPhotoAsync(It.IsAny<IFormFile>()))
+                .ReturnsAsync(uploadResult);
+
+            _mockUnitOfWork.Setup(u => u.Complete())
+                .ReturnsAsync(true);
+
+            var mockHttpContext = new Mock<HttpContext>();
+            var mockClaimsPrincipal = new ClaimsPrincipal(
+                new ClaimsIdentity(new[]
+                {
+                    new Claim(ClaimTypes.Name, username)
+                }, "mock")
+            );
+            mockHttpContext.Setup(c => c.User).Returns(mockClaimsPrincipal);
+
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = mockHttpContext.Object
+            };
+
+            var fileMock = new Mock<IFormFile>();
+            var content = "fake image content";
+            var fileName = "test.jpg";
+            var ms = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(content));
+            fileMock.Setup(_ => _.OpenReadStream()).Returns(ms);
+            fileMock.Setup(_ => _.FileName).Returns(fileName);
+            fileMock.Setup(_ => _.Length).Returns(ms.Length);
+
+            // Act
+            var result = await _controller.AddPhoto(fileMock.Object!);
+
+            // Assert
+            var createdAtAction = result.Result as CreatedAtActionResult;
+            createdAtAction.Should().NotBeNull();
+            createdAtAction!.ActionName.Should().Be(nameof(_controller.GetUser));
+            _mockUnitOfWork.Verify(u => u.Complete(), Times.Once);
+        }
+
+        [Fact]
+        public async Task AddPhoto_ReturnsCreatedAtRoute_WhenPhotoAddedSuccessfully()
+        {
+            // Arrange
+            var currentUsername = "testuser";
+            var mockHttpContext = new Mock<HttpContext>();
+            var mockClaimsPrincipal = new ClaimsPrincipal(
+                new ClaimsIdentity(new[]
+                {
+                    new Claim(ClaimTypes.Name, currentUsername)
+                }, "mock")
+            );
+            mockHttpContext.Setup(c => c.User).Returns(mockClaimsPrincipal);
+
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = mockHttpContext.Object
+            };
+
+            var appUser = new AppUser
+            {
+                UserName = currentUsername,
+                KnownAs = "Test",
+                Gender = "Male",
+                City = "TestCity",
+                Country = "TestCountry",
+                Photos = new List<Photo>()
+            };
+
+            _mockUnitOfWork.Setup(u => u.UserRepository.GetUserByUsernameAsync(currentUsername))
+                .ReturnsAsync(appUser);
+
+            var fileMock = new Mock<IFormFile>();
+
+            // Mock successful photo upload
+            _mockPhotoService.Setup(p => p.AddPhotoAsync(It.IsAny<IFormFile>()))
+                .ReturnsAsync(new ImageUploadResult
+                {
+                    SecureUrl = new Uri("http://photo.url"),
+                    PublicId = "public123"
+                });
+
+            _mockUnitOfWork.Setup(u => u.Complete()).ReturnsAsync(true);
+
+            // Act
+            var result = await _controller.AddPhoto(fileMock.Object);
+
+            // Assert
+            var createdAtActionResult = result.Result as CreatedAtActionResult;
+            createdAtActionResult.Should().NotBeNull();
+            createdAtActionResult.ActionName.Should().Be(nameof(_controller.GetUser));
+            createdAtActionResult.RouteValues["username"].Should().Be(currentUsername);
+
+            appUser.Photos.Should().ContainSingle();
+            appUser.Photos.First().Url.Should().Be("http://photo.url/"); // matches mocked SecureUrl
+
+            _mockUnitOfWork.Verify(u => u.Complete(), Times.Once);
+            _mockPhotoService.Verify(s => s.AddPhotoAsync(fileMock.Object), Times.Once);
         }
 
         [Fact]
