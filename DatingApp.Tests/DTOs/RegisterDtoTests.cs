@@ -154,6 +154,28 @@ namespace DatingApp.Tests.DTOs
         }
 
         [Fact]
+        public void RegisterDto_Valid_WhenDateOfBirthIsVeryOld()
+        {
+            var dto = new RegisterDto
+            {
+                Username = "alice",
+                KnownAs = "Alice",
+                Gender = "Female",
+                DateOfBirth = "1900-01-01", // extreme but valid
+                City = "Wonderland",
+                Country = "Fantasy",
+                Password = "secure1"
+            };
+
+            // Act
+            DateTime parsed;
+            var success = DateTime.TryParse(dto.DateOfBirth, out parsed);
+
+            success.Should().BeTrue();
+            parsed.Year.Should().Be(1900);
+        }
+
+        [Fact]
         public void RegisterDto_Invalid_WhenCityMissing()
         {
             var dto = CreateValidDto();
