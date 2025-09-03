@@ -85,5 +85,17 @@ namespace DatingApp.Tests.DTOs
             results.Should().ContainSingle()
                 .Which.MemberNames.Should().Contain("City");
         }
+
+        [Fact]
+        public void RegisterDto_Invalid_WhenCountryMissing()
+        {
+            var dto = CreateValidDto();
+            dto.Country = null!;
+
+            var results = ValidateModel(dto);
+
+            results.Should().ContainSingle()
+                .Which.MemberNames.Should().Contain("Country");
+        }
     }
 }
