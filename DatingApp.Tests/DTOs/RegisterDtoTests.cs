@@ -121,5 +121,15 @@ namespace DatingApp.Tests.DTOs
             results.Should().ContainSingle()
                 .Which.ErrorMessage.Should().Contain("minimum length of 4 and a maximum length of 8");
         }
+
+        [Fact]
+        public void RegisterDto_Valid_WhenAllFieldsCorrect()
+        {
+            var dto = CreateValidDto();
+
+            var results = ValidateModel(dto);
+
+            results.Should().BeEmpty(); // no validation errors
+        }
     }
 }
