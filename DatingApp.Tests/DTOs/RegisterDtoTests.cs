@@ -176,6 +176,33 @@ namespace DatingApp.Tests.DTOs
         }
 
         [Fact]
+        public void RegisterDto_Invalid_WhenUserIsUnder18()
+        {
+            var under18Date = DateTime.UtcNow.AddYears(-17).ToString("yyyy-MM-dd");
+
+            var dto = new RegisterDto
+            {
+                Username = "alice",
+                KnownAs = "Alice",
+                Gender = "Female",
+                DateOfBirth = under18Date,
+                City = "Wonderland",
+                Country = "Fantasy",
+                Password = "secure1"
+            };
+
+            // Act
+            DateTime parsed;
+            var success = DateTime.TryParse(dto.DateOfBirth, out parsed);
+
+            success.Should().BeTrue();
+            var age = DateTime.Today.Year - parsed.Year;
+            if (parsed.Date > DateTime.Today.AddYears(-age)) age--;
+
+            age.Should().BeLessThan(18);
+        }
+
+        [Fact]
         public void RegisterDto_Invalid_WhenCityMissing()
         {
             var dto = CreateValidDto();
