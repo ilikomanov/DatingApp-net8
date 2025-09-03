@@ -73,5 +73,17 @@ namespace DatingApp.Tests.DTOs
             results.Should().ContainSingle()
                 .Which.MemberNames.Should().Contain("DateOfBirth");
         }
+
+        [Fact]
+        public void RegisterDto_Invalid_WhenCityMissing()
+        {
+            var dto = CreateValidDto();
+            dto.City = null!;
+
+            var results = ValidateModel(dto);
+
+            results.Should().ContainSingle()
+                .Which.MemberNames.Should().Contain("City");
+        }
     }
 }
