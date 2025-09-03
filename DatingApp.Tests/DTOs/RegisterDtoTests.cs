@@ -75,6 +75,32 @@ namespace DatingApp.Tests.DTOs
         }
 
         [Fact]
+        public void RegisterDto_Invalid_WhenDateOfBirthIsNotAValidDate()
+        {
+            var dto = new RegisterDto
+            {
+                Username = "bob",
+                KnownAs = "Bobby",
+                Gender = "Male",
+                DateOfBirth = "not-a-date", // invalid
+                City = "TestCity",
+                Country = "TestCountry",
+                Password = "secret"
+            };
+
+            // Act: validation itself will pass, because it's just a string
+            var results = ValidateModel(dto);
+
+            results.Should().BeEmpty(); // Required passes
+
+            // Extra check: try parsing manually
+            Action act = () => DateTime.Parse(dto.DateOfBirth!);
+
+            act.Should().Throw<FormatException>()
+                .WithMessage("*not recognized as a valid DateTime*");
+        }
+
+        [Fact]
         public void RegisterDto_Invalid_WhenCityMissing()
         {
             var dto = CreateValidDto();
