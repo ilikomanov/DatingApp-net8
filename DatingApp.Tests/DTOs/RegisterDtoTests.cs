@@ -130,6 +130,30 @@ namespace DatingApp.Tests.DTOs
         }
 
         [Fact]
+        public void RegisterDto_Invalid_WhenDateOfBirthIsInTheFuture()
+        {
+            var futureDate = DateTime.UtcNow.AddYears(1).ToString("yyyy-MM-dd");
+
+            var dto = new RegisterDto
+            {
+                Username = "alice",
+                KnownAs = "Alice",
+                Gender = "Female",
+                DateOfBirth = futureDate,
+                City = "Wonderland",
+                Country = "Fantasy",
+                Password = "secure1"
+            };
+
+            // Act
+            DateTime parsed;
+            var success = DateTime.TryParse(dto.DateOfBirth, out parsed);
+
+            success.Should().BeTrue();
+            parsed.Should().BeAfter(DateTime.UtcNow);
+        }
+
+        [Fact]
         public void RegisterDto_Invalid_WhenCityMissing()
         {
             var dto = CreateValidDto();
