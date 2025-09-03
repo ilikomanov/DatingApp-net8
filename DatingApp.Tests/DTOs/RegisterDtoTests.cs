@@ -101,6 +101,35 @@ namespace DatingApp.Tests.DTOs
         }
 
         [Fact]
+        public void RegisterDto_Valid_WhenDateOfBirthIsAValidDate()
+        {
+            var dto = new RegisterDto
+            {
+                Username = "alice",
+                KnownAs = "Alice",
+                Gender = "Female",
+                DateOfBirth = "1990-05-15", // valid ISO format
+                City = "Wonderland",
+                Country = "Fantasy",
+                Password = "secure1"
+            };
+
+            // Act: validation should pass
+            var results = ValidateModel(dto);
+
+            results.Should().BeEmpty();
+
+            // Extra check: try parsing manually
+            DateTime parsed;
+            var success = DateTime.TryParse(dto.DateOfBirth, out parsed);
+
+            success.Should().BeTrue();
+            parsed.Year.Should().Be(1990);
+            parsed.Month.Should().Be(5);
+            parsed.Day.Should().Be(15);
+        }
+
+        [Fact]
         public void RegisterDto_Invalid_WhenCityMissing()
         {
             var dto = CreateValidDto();
