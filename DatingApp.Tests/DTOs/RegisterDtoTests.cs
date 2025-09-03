@@ -37,5 +37,17 @@ namespace DatingApp.Tests.DTOs
             results.Should().ContainSingle()
                 .Which.MemberNames.Should().Contain("Username");
         }
+
+        [Fact]
+        public void RegisterDto_Invalid_WhenKnownAsMissing()
+        {
+            var dto = CreateValidDto();
+            dto.KnownAs = null!;
+
+            var results = ValidateModel(dto);
+
+            results.Should().ContainSingle()
+                .Which.MemberNames.Should().Contain("KnownAs");
+        }
     }
 }
