@@ -109,5 +109,17 @@ namespace DatingApp.Tests.DTOs
             results.Should().ContainSingle()
                 .Which.ErrorMessage.Should().Contain("minimum length of 4 and a maximum length of 8");
         }
+
+        [Fact]
+        public void RegisterDto_Invalid_WhenPasswordTooLong()
+        {
+            var dto = CreateValidDto();
+            dto.Password = "toolongpw"; // 9 chars, invalid
+
+            var results = ValidateModel(dto);
+
+            results.Should().ContainSingle()
+                .Which.ErrorMessage.Should().Contain("minimum length of 4 and a maximum length of 8");
+        }
     }
 }
