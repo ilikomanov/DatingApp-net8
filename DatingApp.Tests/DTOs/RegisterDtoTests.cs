@@ -97,5 +97,17 @@ namespace DatingApp.Tests.DTOs
             results.Should().ContainSingle()
                 .Which.MemberNames.Should().Contain("Country");
         }
+
+        [Fact]
+        public void RegisterDto_Invalid_WhenPasswordTooShort()
+        {
+            var dto = CreateValidDto();
+            dto.Password = "abc"; // 3 chars, invalid
+
+            var results = ValidateModel(dto);
+
+            results.Should().ContainSingle()
+                .Which.ErrorMessage.Should().Contain("minimum length of 4 and a maximum length of 8");
+        }
     }
 }
