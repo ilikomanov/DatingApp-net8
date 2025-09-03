@@ -61,5 +61,17 @@ namespace DatingApp.Tests.DTOs
             results.Should().ContainSingle()
                 .Which.MemberNames.Should().Contain("Gender");
         }
+
+        [Fact]
+        public void RegisterDto_Invalid_WhenDateOfBirth()
+        {
+            var dto = CreateValidDto();
+            dto.DateOfBirth = null!;
+
+            var results = ValidateModel(dto);
+
+            results.Should().ContainSingle()
+                .Which.MemberNames.Should().Contain("DateOfBirth");
+        }
     }
 }
