@@ -138,6 +138,14 @@ namespace DatingApp.Tests.Repositories
         }
 
         [Fact]
+        public async Task GetUserByPhotoId_ReturnsNull_WhenPhotoDoesNotExist()
+        {
+            var user = await _repository.GetUserByPhotoId(999);
+
+            user.Should().BeNull();
+        }
+
+        [Fact]
         public async Task GetUsersAsync_ReturnsAllUsers()
         {
             var users = await _repository.GetUsersAsync();
