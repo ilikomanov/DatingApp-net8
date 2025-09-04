@@ -33,7 +33,7 @@ namespace DatingApp.Tests.Repositories
 
             SeedData();
         }
-        
+
         private void SeedData()
         {
             var alice = new AppUser
@@ -133,7 +133,7 @@ namespace DatingApp.Tests.Repositories
                 m.RecipientUsername == "bob" &&
                 m.Content == "temp");
         }
-        
+
         [Fact]
         public void AddGroup_AddsGroupToContext()
         {
@@ -176,6 +176,21 @@ namespace DatingApp.Tests.Repositories
             var connection = await _repository.GetConnection("123");
             connection.Should().NotBeNull();
             connection!.Username.Should().Be("alice");
+        }
+        
+        [Fact]
+        public async Task GetMessageGroup_ReturnsGroupByName()
+        {
+            // Arrange
+            var groupName = "test-group";
+
+            // Act
+            var group = await _repository.GetMessageGroup(groupName);
+
+            // Assert
+            group.Should().NotBeNull();
+            group!.Name.Should().Be(groupName);
+            group.Connections.Should().ContainSingle(c => c.ConnectionId == "123");
         }
     }
 }
