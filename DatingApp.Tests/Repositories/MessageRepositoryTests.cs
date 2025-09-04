@@ -192,6 +192,24 @@ namespace DatingApp.Tests.Repositories
             result.Should().OnlyContain(m => m.SenderUsername == "alice");
         }
 
+        
+        [Fact]
+        public async Task GetMessagesForUser_ReturnsEmpty_WhenNoMessagesExist()
+        {
+            var messageParams = new MessageParams
+            {
+                Username = "nonexistent",
+                Container = "Inbox",
+                PageNumber = 1,
+                PageSize = 10
+            };
+
+            var result = await _repository.GetMessagesForUser(messageParams);
+
+            result.Should().NotBeNull();
+            result.Should().BeEmpty();
+        }
+
         [Fact]
         public async Task GetMessageGroup_ReturnsGroupByName()
         {
