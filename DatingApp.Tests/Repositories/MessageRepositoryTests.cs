@@ -166,5 +166,13 @@ namespace DatingApp.Tests.Repositories
             var message = await _repository.GetMessage(_context.Messages.First().Id);
             message.Should().NotBeNull();
         }
+
+        [Fact]
+        public async Task GetMessageThread_ReturnsMessagesInOrder()
+        {
+            var messages = await _repository.GetMessageThread("alice", "bob");
+            messages.Should().HaveCount(2);
+            messages.First().SenderUsername.Should().Be("alice");
+        }
     }
 }
