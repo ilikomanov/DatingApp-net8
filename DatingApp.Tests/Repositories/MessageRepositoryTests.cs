@@ -192,7 +192,7 @@ namespace DatingApp.Tests.Repositories
             group!.Name.Should().Be(groupName);
             group.Connections.Should().ContainSingle(c => c.ConnectionId == "123");
         }
-        
+
         [Fact]
         public async Task GetGroupForConnection_ReturnsGroupContainingConnection()
         {
@@ -205,6 +205,22 @@ namespace DatingApp.Tests.Repositories
             // Assert
             group.Should().NotBeNull();
             group!.Connections.Should().ContainSingle(c => c.ConnectionId == connectionId);
+        }
+
+        [Fact]
+        public void RemoveUserMessages_DeletesAllUserMessages()
+        {
+            // Arrange
+            var aliceMessagesBefore = _context.Messages.Count(m => m.SenderUsername == "alice" || m.RecipientUsername == "alice");
+            aliceMessagesBefore.Should().BeGreaterThan(0);
+
+            // Act
+            _repository.RemoveUserMessages("alice");
+            _context.SaveChanges();
+
+            // Assert
+            var aliceMessagesAfter = _context.Messages.Count(m => m.SenderUsername == "alice" || m.RecipientUsername == "alice");
+            aliceMessagesAfter.Should().Be(0);
         }
     }
 }
