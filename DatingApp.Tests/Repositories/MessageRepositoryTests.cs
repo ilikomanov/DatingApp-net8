@@ -234,6 +234,14 @@ namespace DatingApp.Tests.Repositories
         }
 
         [Fact]
+        public async Task GetMessageThread_ReturnsEmpty_WhenNoMessagesBetweenUsers()
+        {
+            var messages = await _repository.GetMessageThread("alice", "nonexistent");
+
+            messages.Should().BeEmpty();
+        }
+
+        [Fact]
         public async Task GetConnection_ReturnsConnection()
         {
             var connection = await _repository.GetConnection("123");
