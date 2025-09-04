@@ -107,6 +107,13 @@ namespace DatingApp.Tests.Repositories
             user!.Photos.Should().ContainSingle(p => p.Url.Contains("bob1"));
         }
 
+        [Fact]
+        public async Task GetUserByUsernameAsync_ReturnsNull_WhenNotFound()
+        {
+            var user = await _repository.GetUserByUsernameAsync("nonexistent");
+            user.Should().BeNull();
+        }
+
         public void Dispose()
         {
             _context.Dispose();
