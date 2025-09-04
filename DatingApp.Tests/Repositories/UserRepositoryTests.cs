@@ -159,6 +159,14 @@ namespace DatingApp.Tests.Repositories
             member.Should().BeNull();
         }
 
+        [Fact]
+        public async Task GetMembersAsync_AppliesGenderFilter()
+        {
+            var userParams = new UserParams { Gender = "female", PageNumber = 1, PageSize = 10 };
+            var members = await _repository.GetMembersAsync(userParams);
+            members.Should().ContainSingle(m => m.Username == "alice");
+        }
+
         public void Dispose()
         {
             _context.Dispose();
