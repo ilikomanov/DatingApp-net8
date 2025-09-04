@@ -296,6 +296,16 @@ namespace DatingApp.Tests.Repositories
         }
 
         [Fact]
+        public void RemoveUserMessages_DoesNotThrow_WhenUserDoesNotExist()
+        {
+            Action act = () => _repository.RemoveUserMessages("nonexistent");
+            act.Should().NotThrow();
+
+            // Ensure existing messages are still present
+            _context.Messages.Count().Should().BeGreaterThan(0);
+        }
+
+        [Fact]
         public void RemoveConnection_RemovesConnectionFromContext()
         {
             var connection = _context.Connections.First();
