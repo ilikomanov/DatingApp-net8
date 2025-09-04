@@ -122,6 +122,13 @@ namespace DatingApp.Tests.Repositories
             user!.UserName.Should().Be("alice");
         }
 
+        [Fact]
+        public async Task GetUserByPhotoId_ReturnsNull_WhenNoUserHasPhoto()
+        {
+            var user = await _repository.GetUserByPhotoId(999);
+            user.Should().BeNull();
+        }
+
         public void Dispose()
         {
             _context.Dispose();
