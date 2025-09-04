@@ -153,6 +153,22 @@ namespace DatingApp.Tests.Repositories
         }
 
         [Fact]
+        public async Task GetMembersAsync_ExcludesCurrentUsername()
+        {
+            var userParams = new UserParams
+            {
+                CurrentUsername = "alice",
+                PageNumber = 1,
+                PageSize = 10
+            };
+
+            var members = await _repository.GetMembersAsync(userParams);
+
+            members.Should().NotContain(m => m.Username == "alice");
+            members.Should().ContainSingle(m => m.Username == "bob");
+        }
+
+        [Fact]
         public async Task GetMembersAsync_OrdersByCreated()
         {
             var userParams = new UserParams { OrderBy = "created", PageNumber = 1, PageSize = 10 };
