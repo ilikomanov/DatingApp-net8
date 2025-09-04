@@ -175,6 +175,15 @@ namespace DatingApp.Tests.Repositories
             members.Should().ContainSingle(m => m.Username == "bob");
         }
 
+        [Fact]
+        public async Task GetMembersAsync_OrdersByCreated()
+        {
+            var userParams = new UserParams { OrderBy = "created", PageNumber = 1, PageSize = 10 };
+            var members = await _repository.GetMembersAsync(userParams);
+            var ordered = members.ToList();
+            ordered.First().Username.Should().Be("alice"); // alice created more recently
+        }
+        
         public void Dispose()
         {
             _context.Dispose();
