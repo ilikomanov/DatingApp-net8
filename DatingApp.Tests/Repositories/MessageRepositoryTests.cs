@@ -226,6 +226,14 @@ namespace DatingApp.Tests.Repositories
         }
 
         [Fact]
+        public async Task GetMessageGroup_ReturnsNull_WhenGroupDoesNotExist()
+        {
+            var group = await _repository.GetMessageGroup("nonexistent-group");
+
+            group.Should().BeNull();
+        }
+
+        [Fact]
         public async Task GetMessageThread_ReturnsMessagesInOrder()
         {
             var messages = await _repository.GetMessageThread("alice", "bob");
