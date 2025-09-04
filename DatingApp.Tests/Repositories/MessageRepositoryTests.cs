@@ -105,5 +105,26 @@ namespace DatingApp.Tests.Repositories
                 m.RecipientUsername == "bob" &&
                 m.Content == "new message");
         }
+
+        [Fact]
+        public void DeleteMessage_RemovesMessageFromContext()
+        {
+            var message = new Message
+            {
+                SenderUsername = "alice",
+                RecipientUsername = "bob",
+                Content = "temp"
+            };
+            _context.Messages.Add(message);
+            _context.SaveChanges();
+
+            _repository.DeleteMessage(message);
+            _context.SaveChanges();
+
+            _context.Messages.Should().NotContain(m =>
+                m.SenderUsername == "alice" &&
+                m.RecipientUsername == "bob" &&
+                m.Content == "temp");
+        }
     }
 }
