@@ -167,6 +167,14 @@ namespace DatingApp.Tests.Repositories
             members.Should().ContainSingle(m => m.Username == "alice");
         }
 
+        [Fact]
+        public async Task GetMembersAsync_AppliesAgeFilter()
+        {
+            var userParams = new UserParams { MinAge = 28, MaxAge = 35, PageNumber = 1, PageSize = 10 };
+            var members = await _repository.GetMembersAsync(userParams);
+            members.Should().ContainSingle(m => m.Username == "bob");
+        }
+
         public void Dispose()
         {
             _context.Dispose();
