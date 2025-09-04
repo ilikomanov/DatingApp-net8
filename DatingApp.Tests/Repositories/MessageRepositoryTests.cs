@@ -264,6 +264,14 @@ namespace DatingApp.Tests.Repositories
         }
 
         [Fact]
+        public async Task GetGroupForConnection_ReturnsNull_WhenConnectionDoesNotExist()
+        {
+            var group = await _repository.GetGroupForConnection("nonexistent-connection");
+
+            group.Should().BeNull();
+        }
+
+        [Fact]
         public void RemoveUserMessages_DeletesAllUserMessages()
         {
             // Arrange
