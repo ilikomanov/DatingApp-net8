@@ -61,6 +61,7 @@ namespace DatingApp.Tests.Repositories
                         new Photo { Id = 101, Url = "http://example.com/alice1.jpg", IsMain = true }
                     }
                 },
+                
                 new AppUser
                 {
                     Id = 2,
@@ -82,6 +83,15 @@ namespace DatingApp.Tests.Repositories
             _context.Users.AddRange(users);
             _context.SaveChanges();
         }
+
+        [Fact]
+        public async Task GetUserByIdAsync_ReturnsCorrectUser()
+        {
+            var user = await _repository.GetUserByIdAsync(1);
+            user.Should().NotBeNull();
+            user!.UserName.Should().Be("alice");
+        }
+
 
         public void Dispose()
         {
