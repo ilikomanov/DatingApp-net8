@@ -33,57 +33,64 @@ namespace DatingApp.Tests.Repositories
 
             SeedData();
         }
-
+        
         private void SeedData()
         {
             var alice = new AppUser
             {
-                Id = 1,
                 UserName = "alice",
                 KnownAs = "Alice",
                 Gender = "female",
                 City = "Wonderland",
                 Country = "Fantasy",
             };
-
             var bob = new AppUser
             {
-                Id = 2,
                 UserName = "bob",
                 Gender = "male",
                 KnownAs = "Bobby",
                 City = "TestCity",
                 Country = "TestCountry",
             };
-
-            var msg1 = new Message
-            {
-                Id = 1,
-                Sender = alice,
-                SenderUsername = "alice",
-                Recipient = bob,
-                RecipientUsername = "bob",
-                Content = "Hi Bob",
-                MessageSent = DateTime.UtcNow.AddMinutes(-10)
-            };
-            var msg2 = new Message
-            {
-                Id = 2,
-                Sender = bob,
-                SenderUsername = "bob",
-                Recipient = alice,
-                RecipientUsername = "alice",
-                Content = "Hi Alice",
-                MessageSent = DateTime.UtcNow.AddMinutes(-5)
-            };
-
-            var group = new Group { Name = "group1" };
-            var connection = new Connection { ConnectionId = "conn1", Username = "alice" };
-            group.Connections.Add(connection);
-
             _context.Users.AddRange(alice, bob);
-            _context.Messages.AddRange(msg1, msg2);
+
+            _context.Messages.AddRange(
+                new Message
+                {
+                    Sender = alice,
+                    SenderUsername = "alice",
+                    Recipient = bob,
+                    RecipientUsername = "bob",
+                    Content = "Hi Bob",
+                    MessageSent = DateTime.UtcNow
+                },
+                new Message
+                {
+                    Sender = bob,
+                    SenderUsername = "bob",
+                    Recipient = alice,
+                    RecipientUsername = "alice",
+                    Content = "Hi Alice",
+                    MessageSent = DateTime.UtcNow
+                }
+            );
+
+            // Important: set Username for Connection
+            var connection = new Connection
+            {
+                ConnectionId = "123",
+                Username = "alice"
+            };
+
+            var group = new Group
+            {
+                Name = "test-group",
+                Connections = new List<Connection> { connection }
+            };
+
             _context.Groups.Add(group);
+            _context.Connections.Add(connection);
+
             _context.SaveChanges();
         }
 
@@ -126,38 +133,26 @@ namespace DatingApp.Tests.Repositories
                 m.RecipientUsername == "bob" &&
                 m.Content == "temp");
         }
-
+        
         [Fact]
         public void AddGroup_AddsGroupToContext()
         {
-            var group = new Group { Name = "test-group" };
+            var group = new Group { Name = "new-group" };
 
             _repository.AddGroup(group);
             _context.SaveChanges();
 
-            _context.Groups.Should().ContainSingle(g => g.Name == "test-group");
+            _context.Groups.Should().Contain(g => g.Name == "new-group");
         }
 
         [Fact]
         public void RemoveConnection_RemovesConnectionFromContext()
         {
-            var group = new Group { Name = "test-group" };
-            var connection = new Connection
-            {
-                ConnectionId = "123",
-                Username = "alice"
-            };
-
-            // Associate connection with the group
-            group.Connections = new List<Connection> { connection };
-
-            _context.Groups.Add(group);
-            _context.SaveChanges();
-
+            var connection = _context.Connections.First();
             _repository.RemoveConnection(connection);
             _context.SaveChanges();
 
-            _context.Connections.Should().NotContain(c => c.ConnectionId == "123");
+            _context.Connections.Should().NotContain(c => c.ConnectionId == connection.ConnectionId);
         }
 
         [Fact]
@@ -173,6 +168,14 @@ namespace DatingApp.Tests.Repositories
             var messages = await _repository.GetMessageThread("alice", "bob");
             messages.Should().HaveCount(2);
             messages.First().SenderUsername.Should().Be("alice");
+        }
+
+        [Fact]
+        public async Task GetConnection_ReturnsConnection()
+        {
+            var connection = await _repository.GetConnection("123");
+            connection.Should().NotBeNull();
+            connection!.Username.Should().Be("alice");
         }
     }
 }
