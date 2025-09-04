@@ -137,29 +137,6 @@ namespace DatingApp.Tests.Repositories
         }
 
         [Fact]
-        public void Update_SetsEntityStateToModified()
-        {
-            var user = _context.Users.First();
-            _repository.Update(user);
-            _context.Entry(user).State.Should().Be(EntityState.Modified);
-        }
-
-        [Fact]
-        public async Task GetMemberAsync_ReturnsMappedDto()
-        {
-            var member = await _repository.GetMemberAsync("alice", false);
-            member.Should().NotBeNull();
-            member!.Username.Should().Be("alice");
-        }
-
-        [Fact]
-        public async Task GetMemberAsync_ReturnsNull_WhenNotFound()
-        {
-            var member = await _repository.GetMemberAsync("ghost", false);
-            member.Should().BeNull();
-        }
-
-        [Fact]
         public async Task GetMembersAsync_AppliesGenderFilter()
         {
             var userParams = new UserParams { Gender = "female", PageNumber = 1, PageSize = 10 };
@@ -192,6 +169,44 @@ namespace DatingApp.Tests.Repositories
             members.Should().HaveCount(1);
             members.CurrentPage.Should().Be(1);
             members.TotalPages.Should().Be(2);
+        }
+
+        [Fact]
+        public async Task GetMembersAsync_ReturnsEmpty_WhenNoUsersMatchFilters()
+        {
+            var userParams = new UserParams
+            {
+                Gender = "nonexistent",
+                PageNumber = 1,
+                PageSize = 10
+            };
+
+            var members = await _repository.GetMembersAsync(userParams);
+
+            members.Should().BeEmpty();
+        }
+
+        [Fact]
+        public async Task GetMemberAsync_ReturnsMappedDto()
+        {
+            var member = await _repository.GetMemberAsync("alice", false);
+            member.Should().NotBeNull();
+            member!.Username.Should().Be("alice");
+        }
+
+        [Fact]
+        public async Task GetMemberAsync_ReturnsNull_WhenNotFound()
+        {
+            var member = await _repository.GetMemberAsync("ghost", false);
+            member.Should().BeNull();
+        }
+
+        [Fact]
+        public void Update_SetsEntityStateToModified()
+        {
+            var user = _context.Users.First();
+            _repository.Update(user);
+            _context.Entry(user).State.Should().Be(EntityState.Modified);
         }
 
         public void Dispose()
