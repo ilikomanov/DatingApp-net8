@@ -153,6 +153,23 @@ namespace DatingApp.Tests.Repositories
         }
 
         [Fact]
+        public async Task GetMembersAsync_AppliesCombinedFilters()
+        {
+            var userParams = new UserParams
+            {
+                Gender = "female",
+                MinAge = 20,
+                MaxAge = 23, // alice is 25, so she won't match
+                PageNumber = 1,
+                PageSize = 10
+            };
+
+            var members = await _repository.GetMembersAsync(userParams);
+
+            members.Should().BeEmpty();
+        }
+
+        [Fact]
         public async Task GetMembersAsync_ExcludesCurrentUsername()
         {
             var userParams = new UserParams
