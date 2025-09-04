@@ -126,5 +126,16 @@ namespace DatingApp.Tests.Repositories
                 m.RecipientUsername == "bob" &&
                 m.Content == "temp");
         }
+
+        [Fact]
+        public void AddGroup_AddsGroupToContext()
+        {
+            var group = new Group { Name = "test-group" };
+
+            _repository.AddGroup(group);
+            _context.SaveChanges();
+
+            _context.Groups.Should().ContainSingle(g => g.Name == "test-group");
+        }
     }
 }
