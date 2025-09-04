@@ -144,6 +144,14 @@ namespace DatingApp.Tests.Repositories
             _context.Entry(user).State.Should().Be(EntityState.Modified);
         }
 
+        [Fact]
+        public async Task GetMemberAsync_ReturnsMappedDto()
+        {
+            var member = await _repository.GetMemberAsync("alice", false);
+            member.Should().NotBeNull();
+            member!.Username.Should().Be("alice");
+        }
+
         public void Dispose()
         {
             _context.Dispose();
