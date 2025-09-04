@@ -99,6 +99,14 @@ namespace DatingApp.Tests.Repositories
             user.Should().BeNull();
         }
 
+        [Fact]
+        public async Task GetUserByUsernameAsync_ReturnsUserWithPhotos()
+        {
+            var user = await _repository.GetUserByUsernameAsync("bob");
+            user.Should().NotBeNull();
+            user!.Photos.Should().ContainSingle(p => p.Url.Contains("bob1"));
+        }
+
         public void Dispose()
         {
             _context.Dispose();
