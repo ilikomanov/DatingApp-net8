@@ -183,7 +183,17 @@ namespace DatingApp.Tests.Repositories
             var ordered = members.ToList();
             ordered.First().Username.Should().Be("alice"); // alice created more recently
         }
-        
+
+        [Fact]
+        public async Task GetMembersAsync_ReturnsPagedResults()
+        {
+            var userParams = new UserParams { PageNumber = 1, PageSize = 1 };
+            var members = await _repository.GetMembersAsync(userParams);
+            members.Should().HaveCount(1);
+            members.CurrentPage.Should().Be(1);
+            members.TotalPages.Should().Be(2);
+        }
+
         public void Dispose()
         {
             _context.Dispose();
