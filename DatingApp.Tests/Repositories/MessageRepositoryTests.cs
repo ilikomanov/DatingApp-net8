@@ -159,5 +159,12 @@ namespace DatingApp.Tests.Repositories
 
             _context.Connections.Should().NotContain(c => c.ConnectionId == "123");
         }
+
+        [Fact]
+        public async Task GetMessage_ReturnsMessage()
+        {
+            var message = await _repository.GetMessage(_context.Messages.First().Id);
+            message.Should().NotBeNull();
+        }
     }
 }
