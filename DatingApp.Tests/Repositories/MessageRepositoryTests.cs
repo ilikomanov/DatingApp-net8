@@ -137,5 +137,27 @@ namespace DatingApp.Tests.Repositories
 
             _context.Groups.Should().ContainSingle(g => g.Name == "test-group");
         }
+
+        [Fact]
+        public void RemoveConnection_RemovesConnectionFromContext()
+        {
+            var group = new Group { Name = "test-group" };
+            var connection = new Connection
+            {
+                ConnectionId = "123",
+                Username = "alice"
+            };
+
+            // Associate connection with the group
+            group.Connections = new List<Connection> { connection };
+
+            _context.Groups.Add(group);
+            _context.SaveChanges();
+
+            _repository.RemoveConnection(connection);
+            _context.SaveChanges();
+
+            _context.Connections.Should().NotContain(c => c.ConnectionId == "123");
+        }
     }
 }
