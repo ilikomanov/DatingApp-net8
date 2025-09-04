@@ -129,6 +129,13 @@ namespace DatingApp.Tests.Repositories
             user.Should().BeNull();
         }
 
+        [Fact]
+        public async Task GetUsersAsync_ReturnsAllUsers()
+        {
+            var users = await _repository.GetUsersAsync();
+            users.Should().HaveCount(2);
+        }
+
         public void Dispose()
         {
             _context.Dispose();
