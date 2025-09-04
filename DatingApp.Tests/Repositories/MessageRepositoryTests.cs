@@ -222,5 +222,25 @@ namespace DatingApp.Tests.Repositories
             var aliceMessagesAfter = _context.Messages.Count(m => m.SenderUsername == "alice" || m.RecipientUsername == "alice");
             aliceMessagesAfter.Should().Be(0);
         }
+
+        [Fact]
+        public async Task GetMessagesForUser_ReturnsInboxMessages()
+        {
+            // Arrange
+            var messageParams = new MessageParams
+            {
+                Username = "alice",
+                Container = "Inbox",
+                PageNumber = 1,
+                PageSize = 10
+            };
+
+            // Act
+            var result = await _repository.GetMessagesForUser(messageParams);
+
+            // Assert
+            result.Should().NotBeNull();
+            result.Should().OnlyContain(m => m.RecipientUsername == "alice");
+        }
     }
 }
