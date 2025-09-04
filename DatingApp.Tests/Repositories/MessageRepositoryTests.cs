@@ -146,20 +146,65 @@ namespace DatingApp.Tests.Repositories
         }
 
         [Fact]
-        public void RemoveConnection_RemovesConnectionFromContext()
-        {
-            var connection = _context.Connections.First();
-            _repository.RemoveConnection(connection);
-            _context.SaveChanges();
-
-            _context.Connections.Should().NotContain(c => c.ConnectionId == connection.ConnectionId);
-        }
-
-        [Fact]
         public async Task GetMessage_ReturnsMessage()
         {
             var message = await _repository.GetMessage(_context.Messages.First().Id);
             message.Should().NotBeNull();
+        }
+
+        [Fact]
+        public async Task GetMessagesForUser_ReturnsInboxMessages()
+        {
+            // Arrange
+            var messageParams = new MessageParams
+            {
+                Username = "alice",
+                Container = "Inbox",
+                PageNumber = 1,
+                PageSize = 10
+            };
+
+            // Act
+            var result = await _repository.GetMessagesForUser(messageParams);
+
+            // Assert
+            result.Should().NotBeNull();
+            result.Should().OnlyContain(m => m.RecipientUsername == "alice");
+        }
+
+        [Fact]
+        public async Task GetMessagesForUser_ReturnsOutboxMessages()
+        {
+            // Arrange
+            var messageParams = new MessageParams
+            {
+                Username = "alice",
+                Container = "Outbox",
+                PageNumber = 1,
+                PageSize = 10
+            };
+
+            // Act
+            var result = await _repository.GetMessagesForUser(messageParams);
+
+            // Assert
+            result.Should().NotBeNull();
+            result.Should().OnlyContain(m => m.SenderUsername == "alice");
+        }
+
+        [Fact]
+        public async Task GetMessageGroup_ReturnsGroupByName()
+        {
+            // Arrange
+            var groupName = "test-group";
+
+            // Act
+            var group = await _repository.GetMessageGroup(groupName);
+
+            // Assert
+            group.Should().NotBeNull();
+            group!.Name.Should().Be(groupName);
+            group.Connections.Should().ContainSingle(c => c.ConnectionId == "123");
         }
 
         [Fact]
@@ -176,21 +221,6 @@ namespace DatingApp.Tests.Repositories
             var connection = await _repository.GetConnection("123");
             connection.Should().NotBeNull();
             connection!.Username.Should().Be("alice");
-        }
-
-        [Fact]
-        public async Task GetMessageGroup_ReturnsGroupByName()
-        {
-            // Arrange
-            var groupName = "test-group";
-
-            // Act
-            var group = await _repository.GetMessageGroup(groupName);
-
-            // Assert
-            group.Should().NotBeNull();
-            group!.Name.Should().Be(groupName);
-            group.Connections.Should().ContainSingle(c => c.ConnectionId == "123");
         }
 
         [Fact]
@@ -224,23 +254,13 @@ namespace DatingApp.Tests.Repositories
         }
 
         [Fact]
-        public async Task GetMessagesForUser_ReturnsInboxMessages()
+        public void RemoveConnection_RemovesConnectionFromContext()
         {
-            // Arrange
-            var messageParams = new MessageParams
-            {
-                Username = "alice",
-                Container = "Inbox",
-                PageNumber = 1,
-                PageSize = 10
-            };
+            var connection = _context.Connections.First();
+            _repository.RemoveConnection(connection);
+            _context.SaveChanges();
 
-            // Act
-            var result = await _repository.GetMessagesForUser(messageParams);
-
-            // Assert
-            result.Should().NotBeNull();
-            result.Should().OnlyContain(m => m.RecipientUsername == "alice");
+            _context.Connections.Should().NotContain(c => c.ConnectionId == connection.ConnectionId);
         }
     }
 }
