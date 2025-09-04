@@ -177,7 +177,7 @@ namespace DatingApp.Tests.Repositories
             connection.Should().NotBeNull();
             connection!.Username.Should().Be("alice");
         }
-        
+
         [Fact]
         public async Task GetMessageGroup_ReturnsGroupByName()
         {
@@ -191,6 +191,20 @@ namespace DatingApp.Tests.Repositories
             group.Should().NotBeNull();
             group!.Name.Should().Be(groupName);
             group.Connections.Should().ContainSingle(c => c.ConnectionId == "123");
+        }
+        
+        [Fact]
+        public async Task GetGroupForConnection_ReturnsGroupContainingConnection()
+        {
+            // Arrange
+            var connectionId = "123";
+
+            // Act
+            var group = await _repository.GetGroupForConnection(connectionId);
+
+            // Assert
+            group.Should().NotBeNull();
+            group!.Connections.Should().ContainSingle(c => c.ConnectionId == connectionId);
         }
     }
 }
