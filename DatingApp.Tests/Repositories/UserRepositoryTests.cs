@@ -236,6 +236,24 @@ namespace DatingApp.Tests.Repositories
         }
 
         [Fact]
+        public async Task GetMembersAsync_ReturnsEmpty_WhenNoUsersMatchesFilters()
+        {
+            var userParams = new UserParams
+            {
+                CurrentUsername = "alice",
+                Gender = "nonexistent",
+                MinAge = 18,
+                MaxAge = 99,
+                PageNumber = 1,
+                PageSize = 10
+            };
+
+            var members = await _repository.GetMembersAsync(userParams);
+
+            members.Should().BeEmpty();
+        }
+        
+        [Fact]
         public async Task GetMemberAsync_ReturnsMappedDto()
         {
             var member = await _repository.GetMemberAsync("alice", false);
