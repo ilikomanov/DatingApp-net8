@@ -152,6 +152,13 @@ namespace DatingApp.Tests.Repositories
             member!.Username.Should().Be("alice");
         }
 
+        [Fact]
+        public async Task GetMemberAsync_ReturnsNull_WhenNotFound()
+        {
+            var member = await _repository.GetMemberAsync("ghost", false);
+            member.Should().BeNull();
+        }
+
         public void Dispose()
         {
             _context.Dispose();
