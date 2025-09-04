@@ -251,6 +251,14 @@ namespace DatingApp.Tests.Repositories
         }
 
         [Fact]
+        public async Task GetMemberAsync_ReturnsNull_WhenUserDoesNotExist()
+        {
+            var member = await _repository.GetMemberAsync("nonexistent", isCurrentUser: false);
+
+            member.Should().BeNull();
+        }
+
+        [Fact]
         public void Update_SetsEntityStateToModified()
         {
             var user = _context.Users.First();
