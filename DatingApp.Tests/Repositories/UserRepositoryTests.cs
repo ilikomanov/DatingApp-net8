@@ -136,6 +136,14 @@ namespace DatingApp.Tests.Repositories
             users.Should().HaveCount(2);
         }
 
+        [Fact]
+        public void Update_SetsEntityStateToModified()
+        {
+            var user = _context.Users.First();
+            _repository.Update(user);
+            _context.Entry(user).State.Should().Be(EntityState.Modified);
+        }
+
         public void Dispose()
         {
             _context.Dispose();
