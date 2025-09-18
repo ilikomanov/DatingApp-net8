@@ -59,5 +59,12 @@ namespace DatingApp.Tests.Repositories
             photo.Should().NotBeNull();
             photo!.Url.Should().Be(expectedPhoto.Url);
         }
+
+        [Fact]
+        public async Task GetPhotoById_ReturnsNull_WhenNotFound()
+        {
+            var photo = await _repository.GetPhotoById(999);
+            photo.Should().BeNull();
+        }
     }
 }
