@@ -39,5 +39,17 @@ namespace DatingApp.Tests.Services
             result.Should().NotBeNull();
             // Note: Not actually hitting Cloudinary, so this is more of an integration test if left as-is.
         }
+
+        [Fact]
+        public async Task AddPhotoAsync_ReturnsEmptyResult_WhenFileIsEmpty()
+        {
+            var fileMock = new Mock<IFormFile>();
+            fileMock.Setup(f => f.Length).Returns(0);
+
+            var result = await _service.AddPhotoAsync(fileMock.Object);
+
+            result.Should().NotBeNull();
+            result.PublicId.Should().BeNull();
+        }
     }
 }
