@@ -84,5 +84,15 @@ namespace DatingApp.Tests.Repositories
 
             _context.Photos.Should().NotContain(photo);
         }
+
+        [Fact]
+        public void RemovePhotos_RemovesMultiplePhotos()
+        {
+            var photos = _context.Photos.ToList();
+            _repository.RemovePhotos(photos);
+            _context.SaveChanges();
+
+            _context.Photos.Should().BeEmpty();
+        }
     }
 }
