@@ -135,6 +135,14 @@ namespace DatingApp.Tests.Repositories
         }
 
         [Fact]
+        public async Task GetUserLike_ReturnsNull_WhenNotExists()
+        {
+            var like = await _repository.GetUserLike(1, 999);
+
+            like.Should().BeNull();
+        }
+
+        [Fact]
         public async Task GetUserLikes_ReturnsUsersWhoLikedCurrentUser()
         {
             var likesParams = new LikesParams
