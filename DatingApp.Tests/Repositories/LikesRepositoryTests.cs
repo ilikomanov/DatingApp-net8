@@ -135,6 +135,24 @@ namespace DatingApp.Tests.Repositories
         }
 
         [Fact]
+        public async Task GetUserLikes_ReturnsUsersWhoLikedCurrentUser()
+        {
+            var likesParams = new LikesParams
+            {
+                UserId = 1, // Alice
+                Predicate = "likedBy",
+                PageNumber = 1,
+                PageSize = 10
+            };
+
+            var result = await _repository.GetUserLikes(likesParams);
+
+            result.Should().HaveCount(2);
+            result.Should().Contain(m => m.Username == "bob");
+            result.Should().Contain(m => m.Username == "charlie");
+        }
+
+        [Fact]
         public async Task GetUserLikes_ReturnsLikedUsers()
         {
             var likesParams = new LikesParams { UserId = 1, Predicate = "liked", PageNumber = 1, PageSize = 10 };
