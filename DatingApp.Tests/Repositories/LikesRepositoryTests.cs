@@ -188,6 +188,26 @@ namespace DatingApp.Tests.Repositories
         }
 
         [Fact]
+        public async Task GetUserLikes_ReturnsMutualLikes_WhenNoPredicate()
+        {
+            // Arrange
+            var likesParams = new LikesParams
+            {
+                UserId = 1, // Alice
+                Predicate = "", // triggers default branch
+                PageNumber = 1,
+                PageSize = 10
+            };
+
+            // Act
+            var result = await _repository.GetUserLikes(likesParams);
+
+            // Assert: only Bob ↔ Alice is mutual
+            result.Should().ContainSingle(m => m.Username == "bob");
+            result.Should().NotContain(m => m.Username == "charlie");
+        }
+
+        [Fact]
         public async Task GetUserLike_ReturnsLike_WhenExists()
         {
             var like = await _repository.GetUserLike(1, 2);
