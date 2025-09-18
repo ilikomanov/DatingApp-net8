@@ -125,6 +125,14 @@ namespace DatingApp.Tests.Repositories
         }
 
         [Fact]
+        public async Task GetCurrentUserLikeIds_ReturnsCorrectIds()
+        {
+            var result = await _repository.GetCurrentUserLikeIds(1);
+
+            result.Should().ContainSingle(id => id == 2);
+        }
+
+        [Fact]
         public async Task GetUserLike_ReturnsExistingLike()
         {
             var like = await _repository.GetUserLike(1, 2);
