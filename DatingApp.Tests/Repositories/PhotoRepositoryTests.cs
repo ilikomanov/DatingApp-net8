@@ -75,5 +75,14 @@ namespace DatingApp.Tests.Repositories
             photos.Should().ContainSingle(p => p.IsApproved == false);
         }
 
+        [Fact]
+        public void RemovePhoto_RemovesSinglePhoto()
+        {
+            var photo = _context.Photos.First();
+            _repository.RemovePhoto(photo);
+            _context.SaveChanges();
+
+            _context.Photos.Should().NotContain(photo);
+        }
     }
 }
