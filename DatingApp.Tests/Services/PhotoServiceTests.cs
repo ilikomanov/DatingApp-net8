@@ -51,5 +51,13 @@ namespace DatingApp.Tests.Services
             result.Should().NotBeNull();
             result.PublicId.Should().BeNull();
         }
+
+        [Fact]
+        public async Task DeletePhotoAsync_ReturnsResult()
+        {
+            var result = await _service.DeletePhotoAsync("test-id");
+
+            result.Should().NotBeNull();
+        }
     }
 }
