@@ -66,5 +66,14 @@ namespace DatingApp.Tests.Repositories
             var photo = await _repository.GetPhotoById(999);
             photo.Should().BeNull();
         }
+
+        [Fact]
+        public async Task GetUnapprovedPhotos_ReturnsOnlyUnapproved()
+        {
+            var photos = await _repository.GetUnapprovedPhotos();
+
+            photos.Should().ContainSingle(p => p.IsApproved == false);
+        }
+
     }
 }
