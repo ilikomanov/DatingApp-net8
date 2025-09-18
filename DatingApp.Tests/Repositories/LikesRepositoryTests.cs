@@ -117,6 +117,14 @@ namespace DatingApp.Tests.Repositories
         }
 
         [Fact]
+        public async Task GetCurrentUserLikeIds_ReturnsEmpty_WhenNoLikes()
+        {
+            var result = await _repository.GetCurrentUserLikeIds(999);
+
+            result.Should().BeEmpty();
+        }
+
+        [Fact]
         public async Task GetUserLike_ReturnsExistingLike()
         {
             var like = await _repository.GetUserLike(1, 2);
