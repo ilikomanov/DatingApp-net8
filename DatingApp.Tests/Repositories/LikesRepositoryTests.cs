@@ -170,6 +170,16 @@ namespace DatingApp.Tests.Repositories
             result.Should().ContainSingle();
             result.First().Username.Should().Be("bob");
         }
+
+        [Fact]
+        public async Task GetUserLike_ReturnsLike_WhenExists()
+        {
+            var like = await _repository.GetUserLike(1, 2);
+
+            like.Should().NotBeNull();
+            like!.SourceUserId.Should().Be(1);
+            like.TargetUserId.Should().Be(2);
+        }
         
         [Fact]
         public void RemoveUserLikes_RemovesAllAssociatedLikes()
