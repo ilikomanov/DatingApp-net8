@@ -53,6 +53,29 @@ namespace DatingApp.Tests.Services
         }
 
         [Fact]
+        public async Task CreateToken_IncludesRoleClaims()
+        {
+            var user = new AppUser
+            {
+                Id = 5,
+                UserName = "bob",
+                KnownAs = "Alice",
+                Gender = "female",
+                City = "Wonderland",
+                Country = "Fantasy"
+            };
+
+            _userManagerMock.Setup(x => x.GetRolesAsync(user))
+                .ReturnsAsync(new List<string> { "Admin", "Moderator" });
+
+            var token = await _service.CreateToken(user);
+            var jwt = ReadToken(token);
+
+            jwt.Claims.Should().Contain(c => c.Type == "role" && c.Value == "Admin");
+            jwt.Claims.Should().Contain(c => c.Type == "role" && c.Value == "Moderator");
+        }
+
+        [Fact]
         public async Task CreateToken_ReturnsValidJwt()
         {
             var user = new AppUser
