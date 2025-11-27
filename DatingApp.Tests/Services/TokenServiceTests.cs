@@ -52,6 +52,30 @@ namespace DatingApp.Tests.Services
             return handler.ReadJwtToken(token);
         }
 
+        [Fact]
+        public async Task CreateToken_ReturnsValidJwt()
+        {
+            var user = new AppUser
+            {
+                Id = 1,
+                UserName = "alice",
+                KnownAs = "Alice",
+                Gender = "female",
+                City = "Wonderland",
+                Country = "Fantasy"
+            };
+
+            _userManagerMock.Setup(x => x.GetRolesAsync(user)).ReturnsAsync([]);
+
+            var token = await _service.CreateToken(user);
+            var jwt = ReadToken(token);
+
+            jwt.Should().NotBeNull();
+
+            jwt.Claims
+                .Should()
+                .Contain(c => c.Type == JwtRegisteredClaimNames.UniqueName && c.Value == "alice");
+        }
 
         [Fact]
         public async Task CreateToken_Throws_WhenTokenKeyMissing()
@@ -60,10 +84,15 @@ namespace DatingApp.Tests.Services
 
             var service = new TokenService(config, _userManagerMock.Object);
 
-            var user = new AppUser { Id = 1, UserName = "alice",KnownAs = "Alice",
+            var user = new AppUser
+            {
+                Id = 1,
+                UserName = "alice",
+                KnownAs = "Alice",
                 Gender = "female",
                 City = "Wonderland",
-                Country = "Fantasy" };
+                Country = "Fantasy"
+            };
 
             await Assert.ThrowsAsync<Exception>(() => service.CreateToken(user));
         }
@@ -82,10 +111,15 @@ namespace DatingApp.Tests.Services
 
             var service = new TokenService(config, _userManagerMock.Object);
 
-            var user = new AppUser { Id = 1, UserName = "alice",KnownAs = "Alice",
+            var user = new AppUser
+            {
+                Id = 1,
+                UserName = "alice",
+                KnownAs = "Alice",
                 Gender = "female",
                 City = "Wonderland",
-                Country = "Fantasy" };
+                Country = "Fantasy"
+            };
 
             await Assert.ThrowsAsync<Exception>(() => service.CreateToken(user));
         }
@@ -93,10 +127,15 @@ namespace DatingApp.Tests.Services
         [Fact]
         public async Task CreateToken_Throws_WhenUsernameIsNull()
         {
-            var user = new AppUser { Id = 1, UserName = null!,KnownAs = "Alice",
+            var user = new AppUser
+            {
+                Id = 1,
+                UserName = null!,
+                KnownAs = "Alice",
                 Gender = "female",
                 City = "Wonderland",
-                Country = "Fantasy" };
+                Country = "Fantasy"
+            };
 
             await Assert.ThrowsAsync<Exception>(() => _service.CreateToken(user));
         }
