@@ -51,6 +51,28 @@ namespace DatingApp.Tests.Services
             var handler = new JwtSecurityTokenHandler();
             return handler.ReadJwtToken(token);
         }
+        
+        [Fact]
+        public async Task CreateToken_IncludesUserId()
+        {
+            var user = new AppUser
+            {
+                Id = 99,
+                UserName = "test",
+                KnownAs = "Alice",
+                Gender = "female",
+                City = "Wonderland",
+                Country = "Fantasy"
+            };
+
+            _userManagerMock.Setup(x => x.GetRolesAsync(user)).ReturnsAsync([]);
+
+            var token = await _service.CreateToken(user);
+            var jwt = ReadToken(token);
+
+            jwt.Claims.Should().Contain(c =>
+                c.Type == "nameid" && c.Value == "99");
+        }
 
         [Fact]
         public async Task CreateToken_IncludesRoleClaims()
