@@ -24,6 +24,27 @@ namespace DatingApp.Tests.Controllers
         private readonly Mock<IPhotoService> _mockPhotoService;
         private UsersController _controller;
 
+        private UsersController CreateControllerWithUser(string username)//new method
+        {
+            var controller = new UsersController(
+                _mockUnitOfWork.Object,
+                _mockMapper.Object,
+                _mockPhotoService.Object);
+
+            var user = new ClaimsPrincipal(
+                new ClaimsIdentity(new[]
+                {
+                    new Claim(ClaimTypes.Name, username)
+                }, "mock"));
+
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            return controller;
+        }
+
         public UsersControllerTests()
         {
             _mockUnitOfWork = new Mock<IUnitOfWork>();
@@ -894,6 +915,29 @@ namespace DatingApp.Tests.Controllers
             // Assert
             var badRequest = Assert.IsType<BadRequestObjectResult>(result);
             Assert.Equal("Could not find user", badRequest.Value);
+        }
+
+        [Fact]
+        public async Task UpdateUser_UserNotFound_ReturnsBadRequest()
+        {
+            // Arrange
+            var controller = CreateControllerWithUser("bob");
+            // _unitOfWorkMock.Setup(x => x.UserRepository.GetUserByUsernameAsync("bob"))
+            //     .ReturnsAsync((AppUser?)null);
+
+             _mockUnitOfWork.Setup(x => x.UserRepository.GetUserByUsernameAsync("bob"))
+                .ReturnsAsync((AppUser?)null);
+
+            // Act
+            var result = await controller.UpdateUser(new MemberUpdateDto());
+
+            // Assert
+            result.Should().BeOfType<BadRequestObjectResult>()
+                .Which.Value.Should().Be("Could not find user");
+                
+            _mockMapper.Verify(m => m.Map(It.IsAny<MemberUpdateDto>(), It.IsAny<AppUser>()), Times.Never);
+            
+            _mockUnitOfWork.Verify(u => u.Complete(), Times.Never);
         }
 
         [Fact]
