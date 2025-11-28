@@ -333,8 +333,6 @@ namespace DatingApp.Tests.Controllers
             _mockUnitOfWork.Verify(u => u.UserRepository.GetMemberAsync(requestedUsername, false), Times.Once);
         }
 
-// private readonly Mock<IUnitOfWork> _mockUnitOfWork;
-//         private readonly Mock<IMapper> _mockMapper;
         [Fact]
         public async Task UpdateUser_MapperCalledWithCorrectArguments()
         {
@@ -412,7 +410,7 @@ namespace DatingApp.Tests.Controllers
 
             _mockUnitOfWork.Setup(x => x.UserRepository.GetUserByUsernameAsync("alice"))
                 .ReturnsAsync(user);
-                
+
             _mockUnitOfWork.Setup(x => x.Complete()).ReturnsAsync(true);
 
             // Act
@@ -501,6 +499,31 @@ namespace DatingApp.Tests.Controllers
 
             // Assert
             result.Should().BeOfType<BadRequestObjectResult>();
+        }
+
+        [Fact] 
+        public async Task UpdateUser_SaveFails_ReturnsBadRequest()
+        { 
+            // Arrange
+            var controller = CreateControllerWithUser("alice"); 
+            var user = new AppUser 
+            { 
+                UserName = "alice",
+                KnownAs = "Alice",
+                Gender = "female",
+                City = "Wonderland",
+                Country = "Fantasy" 
+            }; 
+
+            _mockUnitOfWork.Setup(x => x.UserRepository.GetUserByUsernameAsync("alice")) .ReturnsAsync(user); 
+            _mockUnitOfWork.Setup(x => x.Complete()).ReturnsAsync(false); 
+
+            // Act 
+            var result = await controller.UpdateUser(new MemberUpdateDto()); 
+
+            // Assert
+             result.Should().BeOfType<BadRequestObjectResult>() 
+                  .Which.Value.Should().Be("Failed to update the user"); 
         }
 
         [Fact]
