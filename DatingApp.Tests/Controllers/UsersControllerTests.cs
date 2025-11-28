@@ -414,13 +414,25 @@ namespace DatingApp.Tests.Controllers
             // Assert
             var badRequest = Assert.IsType<BadRequestObjectResult>(result);
         }
-
+        
         [Fact]
         public async Task UpdateUser_ReturnsBadRequest_InvalidModelState()
         {
             // Arrange
             var controller = CreateControllerWithUser("alice");
+
             controller.ModelState.AddModelError("KnownAs", "Required");
+
+            // Mock repository call so controller doesn’t crash
+            _mockUnitOfWork.Setup(u => u.UserRepository.GetUserByUsernameAsync("alice"))
+                .ReturnsAsync(new AppUser 
+                { 
+                    UserName = "alice",
+                    KnownAs = "Alice",
+                    Gender = "female",
+                    City = "Wonderland",
+                    Country = "Fantasy"
+                });
 
             // Act
             var result = await controller.UpdateUser(new MemberUpdateDto());

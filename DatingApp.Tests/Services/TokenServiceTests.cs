@@ -81,8 +81,8 @@ namespace DatingApp.Tests.Services
             {
                 Id = 5,
                 UserName = "bob",
-                KnownAs = "Alice",
-                Gender = "female",
+                KnownAs = "Bob",
+                Gender = "male",
                 City = "Wonderland",
                 Country = "Fantasy"
             };
