@@ -396,6 +396,33 @@ namespace DatingApp.Tests.Controllers
         }
 
         [Fact]
+        public async Task UpdateUser_ReturnsNoContent_SaveSuccessful()
+        {
+            // Arrange
+            var controller = CreateControllerWithUser("alice");
+
+            var user = new AppUser 
+            { 
+                UserName = "alice",
+                KnownAs = "Test",
+                Gender = "Male",
+                City = "TestCity",
+                Country = "TestCountry"
+            };
+
+            _mockUnitOfWork.Setup(x => x.UserRepository.GetUserByUsernameAsync("alice"))
+                .ReturnsAsync(user);
+                
+            _mockUnitOfWork.Setup(x => x.Complete()).ReturnsAsync(true);
+
+            // Act
+            var result = await controller.UpdateUser(new MemberUpdateDto());
+
+            // Assert
+            result.Should().BeOfType<NoContentResult>();
+        }
+
+        [Fact]
         public async Task UpdateUser_ReturnsBadRequest_WhenModelStateIsInvalid()
         {
             // Arrange
