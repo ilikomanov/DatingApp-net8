@@ -416,6 +416,20 @@ namespace DatingApp.Tests.Controllers
         }
 
         [Fact]
+        public async Task UpdateUser_ReturnsBadRequest_InvalidModelState()
+        {
+            // Arrange
+            var controller = CreateControllerWithUser("alice");
+            controller.ModelState.AddModelError("KnownAs", "Required");
+
+            // Act
+            var result = await controller.UpdateUser(new MemberUpdateDto());
+
+            // Assert
+            result.Should().BeOfType<BadRequestObjectResult>();
+        }
+
+        [Fact]
         public async Task UpdateUser_ReturnsBadRequest_WhenUserNotFound()
         {
             // Arrange
