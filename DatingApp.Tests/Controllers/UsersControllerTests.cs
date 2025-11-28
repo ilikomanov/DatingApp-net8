@@ -922,10 +922,8 @@ namespace DatingApp.Tests.Controllers
         {
             // Arrange
             var controller = CreateControllerWithUser("bob");
-            // _unitOfWorkMock.Setup(x => x.UserRepository.GetUserByUsernameAsync("bob"))
-            //     .ReturnsAsync((AppUser?)null);
 
-             _mockUnitOfWork.Setup(x => x.UserRepository.GetUserByUsernameAsync("bob"))
+            _mockUnitOfWork.Setup(x => x.UserRepository.GetUserByUsernameAsync("bob"))
                 .ReturnsAsync((AppUser?)null);
 
             // Act
