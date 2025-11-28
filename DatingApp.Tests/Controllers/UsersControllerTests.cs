@@ -333,6 +333,41 @@ namespace DatingApp.Tests.Controllers
             _mockUnitOfWork.Verify(u => u.UserRepository.GetMemberAsync(requestedUsername, false), Times.Once);
         }
 
+// private readonly Mock<IUnitOfWork> _mockUnitOfWork;
+//         private readonly Mock<IMapper> _mockMapper;
+        [Fact]
+        public async Task UpdateUser_MapperCalledWithCorrectArguments()
+        {
+            // Arrange
+            var controller = CreateControllerWithUser("alice");
+
+            var user = new AppUser 
+            { 
+                UserName = "alice",
+                KnownAs = "Alice",
+                Gender = "female",
+                City = "Wonderland",
+                Country = "Fantasy"
+            };
+
+            var dto = new MemberUpdateDto
+            {
+                City = "UpdatedCity",
+                Country = "UpdatedCountry"
+            };
+
+            _mockUnitOfWork.Setup(x => x.UserRepository.GetUserByUsernameAsync("alice"))
+                .ReturnsAsync(user);
+
+            _mockUnitOfWork.Setup(x => x.Complete()).ReturnsAsync(true);
+
+            // Act
+            await controller.UpdateUser(dto);
+
+            // Assert
+            _mockMapper.Verify(m => m.Map(dto, user), Times.Once);
+        }
+
         [Fact]
         public async Task UpdateUser_ReturnsNoContent_WhenUpdateIsSuccessful()
         {
