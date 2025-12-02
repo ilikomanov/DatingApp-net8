@@ -64,7 +64,7 @@ namespace DatingApp.Tests.Controllers
                 HttpContext = new DefaultHttpContext { User = user }
             };
         }
-
+        
         [Fact]
         public async Task GetUsers_ReturnsOkResult_WithPagedMembers()
         {
@@ -332,7 +332,7 @@ namespace DatingApp.Tests.Controllers
             result.Value.Should().Be(expectedMember);
             _mockUnitOfWork.Verify(u => u.UserRepository.GetMemberAsync(requestedUsername, false), Times.Once);
         }
-        
+
         [Fact]
         public async Task UpdateUser_ReturnsBadRequest_WhenModelStateInvalid()
         {
@@ -347,7 +347,8 @@ namespace DatingApp.Tests.Controllers
                 .Setup(x => x.UserRepository.GetUserByUsernameAsync("alice"))
                 .ReturnsAsync(new AppUser 
                 { 
-                    UserName = "alice",  KnownAs = "Alice",
+                    UserName = "alice",  
+                    KnownAs = "Alice",
                     Gender = "female",
                     City = "Wonderland",
                     Country = "Fantasy" 
@@ -1175,6 +1176,159 @@ namespace DatingApp.Tests.Controllers
             _mockMapper.Verify(m => m.Map(It.IsAny<MemberUpdateDto>(), It.IsAny<AppUser>()), Times.Never);
             
             _mockUnitOfWork.Verify(u => u.Complete(), Times.Never);
+        }
+
+        [Fact]
+        public async Task AddPhoto_ReturnsBadRequest_WhenPhotoServiceReturnsError()
+        {
+            // Arrange
+            var controller = CreateControllerWithUser("alice");
+
+            var user = new AppUser
+            {
+                UserName = "alice",
+                KnownAs = "Alice",
+                Gender = "female",
+                City = "Wonderland",
+                Country = "Fantasy",
+                Photos = new List<Photo>()
+            };
+
+            _mockUnitOfWork
+                .Setup(x => x.UserRepository.GetUserByUsernameAsync("alice"))
+                .ReturnsAsync(user);
+
+            var fakeFile = new Mock<IFormFile>();
+
+            _mockPhotoService
+                .Setup(p => p.AddPhotoAsync(It.IsAny<IFormFile>()))
+                .ReturnsAsync(new CloudinaryDotNet.Actions.ImageUploadResult
+                {
+                    Error = new CloudinaryDotNet.Actions.Error { Message = "Upload failed" }
+                });
+
+            // Act
+            var result = await controller.AddPhoto(fakeFile.Object);
+
+            // Assert
+            var badRequest = result.Result as BadRequestObjectResult;
+            badRequest.Should().NotBeNull();
+            badRequest!.Value.Should().Be("Upload failed");
+
+            user.Photos.Should().BeEmpty();
+            _mockUnitOfWork.Verify(u => u.Complete(), Times.Never);
+        }
+
+        [Fact]
+        public async Task AddPhoto_AddsPhotoToUser_WhenSuccessful()
+        {
+            // Arrange
+            var controller = CreateControllerWithUser("alice");
+
+            var user = new AppUser
+            {
+                UserName = "alice",
+                KnownAs = "Alice",
+                Gender = "female",
+                City = "Wonderland",
+                Country = "Fantasy",
+                Photos = new List<Photo>()
+            };
+
+            _mockUnitOfWork
+                .Setup(x => x.UserRepository.GetUserByUsernameAsync("alice"))
+                .ReturnsAsync(user);
+
+            var fakeFile = new Mock<IFormFile>();
+
+            _mockPhotoService
+                .Setup(p => p.AddPhotoAsync(It.IsAny<IFormFile>()))
+                .ReturnsAsync(new CloudinaryDotNet.Actions.ImageUploadResult
+                {
+                    SecureUrl = new Uri("https://cdn.test/photo.jpg"),
+                    PublicId = "abc123"
+                });
+
+            _mockUnitOfWork
+                .Setup(u => u.Complete())
+                .ReturnsAsync(true);
+
+            _mockMapper
+                .Setup(m => m.Map<PhotoDto>(It.IsAny<Photo>()))
+                .Returns((Photo p) => new PhotoDto
+                {
+                    Id = p.Id,
+                    Url = p.Url,
+                    IsMain = p.IsMain,
+                    IsApproved = p.IsApproved
+                });
+
+            // Act
+            var result = await controller.AddPhoto(fakeFile.Object);
+
+            // Assert
+            var created = result.Result as CreatedAtActionResult;
+            created.Should().NotBeNull();
+
+            created!.ActionName.Should().Be(nameof(UsersController.GetUser));
+            created.RouteValues!["username"].Should().Be("alice");
+
+            user.Photos.Should().HaveCount(1);
+            var added = user.Photos.First();
+            added.Url.Should().Be("https://cdn.test/photo.jpg");
+            added.PublicId.Should().Be("abc123");
+
+            _mockUnitOfWork.Verify(u => u.Complete(), Times.Once);
+            _mockMapper.Verify(m => m.Map<PhotoDto>(added), Times.Once);
+        }
+
+
+        [Fact]
+        public async Task AddPhoto_ReturnsBadRequest_WhenSaveFails()
+        {
+            // Arrange
+            var controller = CreateControllerWithUser("alice");
+
+            var user = new AppUser
+            {
+                UserName = "alice",
+                KnownAs = "Alice",
+                Gender = "female",
+                City = "Wonderland",
+                Country = "Fantasy",
+                Photos = new List<Photo>()
+            };
+
+            _mockUnitOfWork
+                .Setup(x => x.UserRepository.GetUserByUsernameAsync("alice"))
+                .ReturnsAsync(user);
+
+            var fakeFile = new Mock<IFormFile>();
+
+            _mockPhotoService
+                .Setup(p => p.AddPhotoAsync(It.IsAny<IFormFile>()))
+                .ReturnsAsync(new CloudinaryDotNet.Actions.ImageUploadResult
+                {
+                    SecureUrl = new Uri("https://cdn.test/photo.jpg"),
+                    PublicId = "abc123"
+                });
+
+            // Ensure save returns FALSE
+            _mockUnitOfWork
+                .Setup(u => u.Complete())
+                .ReturnsAsync(false);
+
+            // Act
+            var result = await controller.AddPhoto(fakeFile.Object);
+
+            // Assert
+            var badRequest = result.Result as BadRequestObjectResult;
+
+            badRequest.Should().NotBeNull();
+            badRequest!.Value.Should().Be("Problem adding photo");
+
+            // Photo should still have been added to user's collection
+            user.Photos.Should().HaveCount(1);
         }
 
         [Fact]
