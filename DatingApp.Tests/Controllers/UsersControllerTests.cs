@@ -332,6 +332,44 @@ namespace DatingApp.Tests.Controllers
             result.Value.Should().Be(expectedMember);
             _mockUnitOfWork.Verify(u => u.UserRepository.GetMemberAsync(requestedUsername, false), Times.Once);
         }
+        
+        [Fact]
+        public async Task UpdateUser_ReturnsBadRequest_WhenModelStateInvalid()
+        {
+            // Arrange
+            var controller = CreateControllerWithUser("alice");
+
+            var dto = new MemberUpdateDto { City = "TestCity" };
+
+            controller.ModelState.AddModelError("City", "Required");
+
+            _mockUnitOfWork
+                .Setup(x => x.UserRepository.GetUserByUsernameAsync("alice"))
+                .ReturnsAsync(new AppUser 
+                { 
+                    UserName = "alice",  KnownAs = "Alice",
+                    Gender = "female",
+                    City = "Wonderland",
+                    Country = "Fantasy" 
+                });
+
+            _mockUnitOfWork.Setup(x => x.Complete()).ReturnsAsync(false);
+
+            // Act
+            var result = await controller.UpdateUser(dto);
+
+            // Assert
+            result.Should().BeOfType<BadRequestObjectResult>();
+
+            // mapper IS called (controller always calls it)
+            _mockMapper.Verify(
+                m => m.Map(dto, It.IsAny<AppUser>()),
+                Times.Once
+            );
+
+            // save is attempted once
+            _mockUnitOfWork.Verify(u => u.Complete(), Times.Once);
+        }
 
         [Fact]
         public async Task UpdateUser_MapperCalledWithCorrectArguments()
@@ -1099,7 +1137,7 @@ namespace DatingApp.Tests.Controllers
                 City = "OldCity",
                 Country = "OldCountry"
             };
-            
+
             var dto = new MemberUpdateDto { City = "TestCity" };
 
             _mockUnitOfWork
