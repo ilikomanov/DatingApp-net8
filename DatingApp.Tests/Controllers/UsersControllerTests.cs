@@ -2131,5 +2131,130 @@ namespace DatingApp.Tests.Controllers
             result.Should().BeOfType<OkResult>();
             testUser.Photos.Should().BeEmpty();
         }
+
+        [Fact]
+        public async Task SetMainPhoto_ReturnsBadRequest_WhenUserNotFound()
+        {
+            // Arrange
+            var controller = CreateControllerWithUser("alice");
+
+            _mockUnitOfWork.Setup(u => u.UserRepository.GetUserByUsernameAsync("alice"))
+                .ReturnsAsync((AppUser?)null);
+
+            // Act
+            var result = await controller.SetMainPhoto(1);
+
+            // Assert
+            result.Should().BeOfType<BadRequestObjectResult>()
+                .Which.Value.Should().Be("Could not find user");
+        }
+
+        [Fact]
+        public async Task SetMainPhoto_ReturnsBadRequest_WhenPhotoNotFoundOrAlreadyMain()
+        {
+            // Arrange
+            var controller = CreateControllerWithUser("alice");
+
+            var user = new AppUser
+            {
+                UserName = "alice",
+                KnownAs = "Alice",
+                Gender = "female",
+                City = "Wonderland",
+                Country = "Fantasy",
+                Photos = new List<Photo>
+                {
+                    new Photo { Id = 1, IsMain = true, Url = "http://example.com/photo.jpg"  },
+                    new Photo { Id = 2, IsMain = false, Url = "http://example2.com/photo.jpg" }
+                }
+            };
+
+            _mockUnitOfWork.Setup(u => u.UserRepository.GetUserByUsernameAsync("alice"))
+                .ReturnsAsync(user);
+
+            // Photo does not exist
+            var resultNotFound = await controller.SetMainPhoto(99);
+            resultNotFound.Should().BeOfType<BadRequestObjectResult>()
+                .Which.Value.Should().Be("Cannot use this as main photo");
+
+            // Photo is already main
+            var resultAlreadyMain = await controller.SetMainPhoto(1);
+            resultAlreadyMain.Should().BeOfType<BadRequestObjectResult>()
+                .Which.Value.Should().Be("Cannot use this as main photo");
+        }
+
+        [Fact]
+        public async Task SetMainPhoto_SetsNewMainPhoto_WhenValid()
+        {
+            // Arrange
+            var controller = CreateControllerWithUser("alice");
+
+            var user = new AppUser
+            {
+                UserName = "alice",
+                KnownAs = "Alice",
+                Gender = "female",
+                City = "Wonderland",
+                Country = "Fantasy",
+                Photos = new List<Photo>
+                {
+                    new Photo { Id = 1, IsMain = true, Url = "http://example.com/photo.jpg" },
+                    new Photo { Id = 2, IsMain = false, Url = "http://example2.com/photo.jpg" }
+                }
+            };
+
+            _mockUnitOfWork.Setup(u => u.UserRepository.GetUserByUsernameAsync("alice"))
+                .ReturnsAsync(user);
+
+            _mockUnitOfWork.Setup(u => u.Complete()).ReturnsAsync(true);
+
+            // Act
+            var result = await controller.SetMainPhoto(2);
+
+            // Assert
+            result.Should().BeOfType<NoContentResult>();
+
+            user.Photos.Single(p => p.Id == 1).IsMain.Should().BeFalse();
+            user.Photos.Single(p => p.Id == 2).IsMain.Should().BeTrue();
+
+            _mockUnitOfWork.Verify(u => u.Complete(), Times.Once);
+        }
+
+        [Fact]
+        public async Task SetMainPhoto_ReturnsBadRequest_WhenSaveFails()
+        {
+            // Arrange
+            var controller = CreateControllerWithUser("alice");
+
+            var user = new AppUser
+            {
+                UserName = "alice",
+                KnownAs = "Alice",
+                Gender = "female",
+                City = "Wonderland",
+                Country = "Fantasy",
+                Photos = new List<Photo>
+                {
+                    new Photo { Id = 1, IsMain = true, Url = "http://example.com/photo.jpg" },
+                    new Photo { Id = 2, IsMain = false, Url = "http://example2.com/photo.jpg" }
+                }
+            };
+
+            _mockUnitOfWork.Setup(u => u.UserRepository.GetUserByUsernameAsync("alice"))
+                .ReturnsAsync(user);
+
+            _mockUnitOfWork.Setup(u => u.Complete()).ReturnsAsync(false);
+
+            // Act
+            var result = await controller.SetMainPhoto(2);
+
+            // Assert
+            result.Should().BeOfType<BadRequestObjectResult>()
+                .Which.Value.Should().Be("Problem setting main photo");
+
+            // Original main photo should remain unchanged
+            user.Photos.Single(p => p.Id == 1).IsMain.Should().BeFalse();
+            user.Photos.Single(p => p.Id == 2).IsMain.Should().BeTrue();
+        }
     }
 }
