@@ -1086,6 +1086,39 @@ namespace DatingApp.Tests.Controllers
         }
 
         [Fact]
+        public async Task UpdateUser_UsesLoggedInUsernameFromClaims()
+        {
+            // Arrange
+            var controller = CreateControllerWithUser("alice"); // logged-in user = "alice"
+
+            var user = new AppUser 
+            { 
+                UserName = "alice",
+                 Gender = "female",
+                KnownAs = "Alice",
+                City = "OldCity",
+                Country = "OldCountry"
+            };
+            
+            var dto = new MemberUpdateDto { City = "TestCity" };
+
+            _mockUnitOfWork
+                .Setup(x => x.UserRepository.GetUserByUsernameAsync("alice"))
+                .ReturnsAsync(user);
+
+            _mockUnitOfWork.Setup(x => x.Complete()).ReturnsAsync(true);
+
+            // Act
+            await controller.UpdateUser(dto);
+
+            // Assert
+            _mockUnitOfWork.Verify(
+                x => x.UserRepository.GetUserByUsernameAsync("alice"),
+                Times.Once
+            );
+        }
+
+        [Fact]
         public async Task UpdateUser_UserNotFound_ReturnsBadRequest()
         {
             // Arrange
