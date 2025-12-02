@@ -1003,6 +1003,26 @@ namespace DatingApp.Tests.Controllers
         }
 
         [Fact]
+        public async Task UpdateUser_ReturnsBadRequest_WhenUserDoesNotExistV2()
+        {
+            // Arrange
+            var controller = CreateControllerWithUser("alice");
+
+            _mockUnitOfWork
+                .Setup(x => x.UserRepository.GetUserByUsernameAsync("alice"))
+                .ReturnsAsync((AppUser?)null);
+
+            var dto = new MemberUpdateDto { City = "TestCity" };
+
+            // Act
+            var result = await controller.UpdateUser(dto);
+
+            // Assert
+            result.Should().BeOfType<BadRequestObjectResult>()
+                .Which.Value.Should().Be("Could not find user");
+        }
+
+        [Fact]
         public async Task UpdateUser_ReturnsBadRequest_WhenUsernameMismatch()
         {
             // Arrange
