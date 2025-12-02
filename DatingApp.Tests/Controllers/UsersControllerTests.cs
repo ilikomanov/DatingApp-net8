@@ -986,6 +986,43 @@ namespace DatingApp.Tests.Controllers
         }
 
         [Fact]
+        public async Task UpdateUser_ReturnsNoContent_WhenSuccessful()
+        {
+            // Arrange
+            var controller = CreateControllerWithUser("alice");
+
+            var user = new AppUser 
+            { 
+                UserName = "alice",
+                Gender = "female",
+                KnownAs = "Alice",
+                City = "OldCity",
+                Country = "OldCountry"
+            };
+
+            var dto = new MemberUpdateDto 
+            { 
+                City = "NewCity",
+                Country = "NewCountry"
+            };
+
+            _mockUnitOfWork.Setup(x => x.UserRepository.GetUserByUsernameAsync("alice"))
+                        .ReturnsAsync(user);
+
+            _mockMapper.Setup(m => m.Map(dto, user));
+            _mockUnitOfWork.Setup(x => x.Complete()).ReturnsAsync(true);
+
+            // Act
+            var result = await controller.UpdateUser(dto);
+
+            // Assert
+            result.Should().BeOfType<NoContentResult>();
+
+            _mockMapper.Verify(m => m.Map(dto, user), Times.Once);
+            _mockUnitOfWork.Verify(u => u.Complete(), Times.Once);
+        }
+
+        [Fact]
         public async Task UpdateUser_ReturnsNotFound_WhenUserDoesNotExist()
         {
             // Arrange
