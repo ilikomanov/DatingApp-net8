@@ -44,6 +44,28 @@ namespace DatingApp.Tests.Controllers
 
             return controller;
         }
+        
+        private UsersController CreateControllerWithMockUser(string username)
+        {
+            var controller = new UsersController(
+                _mockUnitOfWork.Object,
+                _mockMapper.Object,
+                _mockPhotoService.Object);
+
+            var user = new ClaimsPrincipal(
+                new ClaimsIdentity(new[]
+                {
+                    new Claim(ClaimTypes.Name, username),
+                    new Claim(ClaimTypes.NameIdentifier, username)
+                }, "mock"));
+
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            return controller;
+        }
 
         public UsersControllerTests()
         {
@@ -2130,6 +2152,240 @@ namespace DatingApp.Tests.Controllers
             // Assert
             result.Should().BeOfType<OkResult>();
             testUser.Photos.Should().BeEmpty();
+        }
+
+        [Fact]
+        public async Task DeletePhoto_ReturnsBadRequest_WhenUserNotFound()
+        {
+            // Arrange
+            var controller = CreateControllerWithUser("alice");
+
+            _mockUnitOfWork.Setup(u => u.UserRepository.GetUserByUsernameAsync("alice"))
+                .ReturnsAsync((AppUser?)null);
+
+            // Act
+            var result = await controller.DeletePhoto(1);
+
+            // Assert
+            result.Should().BeOfType<BadRequestObjectResult>()
+                .Which.Value.Should().Be("User not found");
+        }
+        
+        [Fact]
+        public async Task DeletePhoto_ReturnsBadRequest_WhenPhotoNotFound()
+        {
+            // Arrange
+            var controller = CreateControllerWithUser("alice");
+
+            var user = new AppUser
+            {
+                UserName = "alice",
+                KnownAs = "Alice",
+                Gender = "female",
+                City = "Wonderland",
+                Country = "Fantasy",
+                Photos =
+                {
+                    new Photo { Id = 1, IsMain = false, Url= "http://example.com/photo.jpg" }
+                }
+            };
+
+            _mockUnitOfWork
+                .Setup(u => u.UserRepository.GetUserByUsernameAsync("alice"))
+                .ReturnsAsync(user);
+
+            // Make repository return null → this triggers controller's BadRequest("This photo cannot be deleted")
+            _mockUnitOfWork
+                .Setup(u => u.PhotoRepository.GetPhotoById(99))
+                .ReturnsAsync((Photo?)null);
+
+            // Act
+            var result = await controller.DeletePhoto(99);
+
+            // Assert
+            var badRequest = result.Should().BeOfType<BadRequestObjectResult>().Subject;
+
+            badRequest.Value.Should().Be("This photo cannot be deleted");
+        }
+        
+        [Fact]
+        public async Task DeletePhoto_ReturnsBadRequest_WhenDeletingMainPhoto()
+        {
+            // Arrange
+            var controller = CreateControllerWithUser("alice");
+
+            var user = new AppUser
+            {
+                UserName = "alice",
+                KnownAs = "Alice",
+                Gender = "female",
+                City = "Wonderland",
+                Country = "Fantasy",
+                Photos =
+                {
+                    new Photo { Id = 1, IsMain = true, Url = "http://example.com/photo.jpg" }
+                }
+            };
+
+            _mockUnitOfWork
+                .Setup(u => u.UserRepository.GetUserByUsernameAsync("alice"))
+                .ReturnsAsync(user);
+
+            // IMPORTANT: The controller gets the photo from the repository, NOT from user.Photos
+            _mockUnitOfWork
+                .Setup(u => u.PhotoRepository.GetPhotoById(1))
+                .ReturnsAsync(new Photo
+                {
+                    Id = 1,
+                    IsMain = true,
+                    Url = "http://example.com/photo.jpg"
+                });
+
+            // Act
+            var result = await controller.DeletePhoto(1);
+
+            // Assert
+            var badRequest = result.Should().BeOfType<BadRequestObjectResult>().Subject;
+
+            badRequest.Value.Should().Be("This photo cannot be deleted");
+        }
+        
+        [Fact]
+        public async Task DeletePhoto_DeletesPhotoFromCloud_WhenPublicIdExists()
+        {
+            // Arrange
+            var controller = CreateControllerWithUser("alice");
+
+            // Create ONE shared photo instance
+            var photo = new Photo
+            {
+                Id = 1,
+                IsMain = false,
+                PublicId = "abc123",
+                Url= "http://example.com/photo.jpg"
+            };
+
+            var user = new AppUser
+            {
+                UserName = "alice",
+                KnownAs = "Alice",
+                Gender = "female",
+                City = "Wonderland",
+                Country = "Fantasy",
+                Photos = new List<Photo> { photo }
+            };
+
+            _mockUnitOfWork
+                .Setup(u => u.UserRepository.GetUserByUsernameAsync("alice"))
+                .ReturnsAsync(user);
+
+            // IMPORTANT: return the SAME instance the user has
+            _mockUnitOfWork
+                .Setup(u => u.PhotoRepository.GetPhotoById(1))
+                .ReturnsAsync(photo);
+
+            _mockPhotoService
+                .Setup(p => p.DeletePhotoAsync("abc123"))
+                .ReturnsAsync(new CloudinaryDotNet.Actions.DeletionResult { Result = "ok" });
+
+            _mockUnitOfWork
+                .Setup(u => u.Complete())
+                .ReturnsAsync(true);
+
+            // Act
+            var result = await controller.DeletePhoto(1);
+
+            // Assert
+            result.Should().BeOfType<OkResult>();
+
+            // Now user.Photos is empty because the SAME reference was removed
+            user.Photos.Should().BeEmpty();
+
+            _mockPhotoService.Verify(p => p.DeletePhotoAsync("abc123"), Times.Once);
+            _mockUnitOfWork.Verify(u => u.Complete(), Times.Once);
+        }
+        
+        [Fact]
+        public async Task DeletePhoto_ReturnsBadRequest_WhenCloudDeletionFails()
+        {
+            // Arrange
+            var controller = CreateControllerWithMockUser("alice");
+
+            var user = new AppUser
+            {
+                UserName = "alice",
+                KnownAs = "Alice",
+                Gender = "female",
+                City = "Wonderland",
+                Country = "Fantasy",
+                Photos = new List<Photo>
+                {
+                    new Photo { Id = 1, IsMain = false, PublicId = "abc123", Url= "http://example.com/photo.jpg" }
+                }
+            };
+
+            _mockUnitOfWork.Setup(u => u.UserRepository.GetUserByUsernameAsync("alice"))
+                .ReturnsAsync(user);
+
+            _mockUnitOfWork.Setup(u => u.PhotoRepository.GetPhotoById(1))
+                .ReturnsAsync(user.Photos.First());
+
+            // Cloud deletion fails (Result="error", but Error=null)
+            _mockPhotoService.Setup(p => p.DeletePhotoAsync("abc123"))
+                .ReturnsAsync(new CloudinaryDotNet.Actions.DeletionResult { Result = "error" });
+
+            _mockUnitOfWork.Setup(u => u.Complete())
+                .ReturnsAsync(false);
+
+            // Act
+            var result = await controller.DeletePhoto(1);
+
+            // Assert
+            result.Should().BeOfType<BadRequestObjectResult>()
+                .Which.Value.Should().Be("Problem deleting photo");
+
+            // The photo will be removed because Error == null
+            user.Photos.Should().BeEmpty();
+
+            _mockUnitOfWork.Verify(u => u.Complete(), Times.Once);
+        }
+
+        [Fact]
+        public async Task DeletePhoto_DeletesLocalPhoto_WhenNoPublicId()
+        {
+            // Arrange
+            var controller = CreateControllerWithMockUser("alice");
+
+            var user = new AppUser
+            {
+                UserName = "alice",
+                KnownAs = "Alice",
+                Gender = "female",
+                City = "Wonderland",
+                Country = "Fantasy",
+                Photos = new List<Photo>
+                {
+                    new Photo { Id = 1, IsMain = false, PublicId = null, Url= "http://example.com/photo.jpg" }
+                }
+            };
+
+            _mockUnitOfWork.Setup(u => u.UserRepository.GetUserByUsernameAsync("alice"))
+                .ReturnsAsync(user);
+
+            // Mock PhotoRepository to return the photo
+            _mockUnitOfWork.Setup(u => u.PhotoRepository.GetPhotoById(1))
+                .ReturnsAsync(user.Photos.First());
+
+            _mockUnitOfWork.Setup(u => u.Complete())
+                .ReturnsAsync(true);
+
+            // Act
+            var result = await controller.DeletePhoto(1);
+
+            // Assert
+            result.Should().BeOfType<OkResult>();
+            user.Photos.Should().BeEmpty();
+            _mockPhotoService.Verify(p => p.DeletePhotoAsync(It.IsAny<string>()), Times.Never);
         }
 
         [Fact]
