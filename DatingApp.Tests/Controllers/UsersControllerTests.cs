@@ -67,6 +67,12 @@ namespace DatingApp.Tests.Controllers
             return controller;
         }
 
+        private PagedList<MemberDto> CreatePagedList(IEnumerable<MemberDto> items, int pageNumber = 1, int pageSize = 10)
+        {
+            var list = items.ToList();
+            return new PagedList<MemberDto>(list, list.Count, pageNumber, pageSize);
+        }
+
         public UsersControllerTests()
         {
             _mockUnitOfWork = new Mock<IUnitOfWork>();
@@ -85,6 +91,23 @@ namespace DatingApp.Tests.Controllers
             {
                 HttpContext = new DefaultHttpContext { User = user }
             };
+        }
+
+        [Fact]
+        public async Task SetMainPhoto_ReturnsBadRequest_WhenPhotoNotFound()
+        {
+            var controller = CreateControllerWithMockUser("alice");
+            var user = new AppUser { UserName = "alice",    KnownAs = "Alice",
+                        Gender = "female",
+                        City = "Wonderland",
+                        Country = "Fantasy", Photos = new List<Photo>() };
+
+            _mockUnitOfWork.Setup(u => u.UserRepository.GetUserByUsernameAsync("alice")).ReturnsAsync(user);
+
+            var result = await controller.SetMainPhoto(99);
+
+            result.Should().BeOfType<BadRequestObjectResult>()
+                .Which.Value.Should().Be("Cannot use this as main photo");
         }
         
         [Fact]
@@ -166,6 +189,24 @@ namespace DatingApp.Tests.Controllers
         }
 
         [Fact]
+        public async Task GetUser_IsCurrentUserFlagIsTrue_WhenUsernameMatches()
+        {
+            // Arrange
+            var controller = CreateControllerWithMockUser("alice");
+            var member = new MemberDto { Username = "alice" };
+
+            _mockUnitOfWork
+                .Setup(u => u.UserRepository.GetMemberAsync("alice", true))
+                .ReturnsAsync(member);
+
+            // Act
+            var result = await controller.GetUser("alice");
+
+            // Assert
+            result.Value.Username.Should().Be("alice");
+        }
+
+        [Fact]
         public async Task GetUser_ReturnsMemberDto_WhenUserExists()
         {
             // Arange
@@ -181,6 +222,35 @@ namespace DatingApp.Tests.Controllers
             // Assert
             result.Value.Should().NotBeNull();
             result.Value.Username.Should().Be(username);
+        }
+
+        [Fact]
+        public async Task GetUsers_ReturnsListOfMembers_WithPaginationHeader()
+        {
+            // Arrange
+            var controller = CreateControllerWithMockUser("alice");
+
+            var userParams = new UserParams();
+
+            var members = CreatePagedList(new List<MemberDto>
+            {
+                new MemberDto { Username = "bob" },
+                new MemberDto { Username = "carol" }
+            });
+
+            _mockUnitOfWork
+                .Setup(u => u.UserRepository.GetMembersAsync(userParams))
+                .ReturnsAsync(members);
+
+            // Act
+            var result = await controller.GetUsers(userParams);
+
+            // Assert
+            var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
+            var returnedMembers = okResult.Value.Should().BeAssignableTo<IEnumerable<MemberDto>>().Subject;
+            returnedMembers.Should().HaveCount(2);
+
+            userParams.CurrentUsername.Should().Be("alice");
         }
 
         [Fact]
@@ -226,6 +296,8 @@ namespace DatingApp.Tests.Controllers
             // Assert
             result.Value.Should().BeNull();
         }
+
+        
 
         [Fact]
         public async Task GetUser_CallsRepoWithIsCurrentUserTrue_WhenUsernameMatchesCurrentUser()
@@ -1079,6 +1151,26 @@ namespace DatingApp.Tests.Controllers
             // Assert
             result.Should().BeOfType<NoContentResult>();
 
+            _mockMapper.Verify(m => m.Map(dto, user), Times.Once);
+            _mockUnitOfWork.Verify(u => u.Complete(), Times.Once);
+        }
+
+        [Fact]
+        public async Task UpdateUser_ReturnsNoContent_WhenUpdateSucceedsV2()
+        {
+            var controller = CreateControllerWithMockUser("alice");
+            var user = new AppUser { UserName = "alice", KnownAs = "Alice",
+                    Gender = "female",
+                    City = "Wonderland",
+                    Country = "Fantasy", };
+            var dto = new MemberUpdateDto { City = "NewCity" };
+
+            _mockUnitOfWork.Setup(u => u.UserRepository.GetUserByUsernameAsync("alice")).ReturnsAsync(user);
+            _mockUnitOfWork.Setup(u => u.Complete()).ReturnsAsync(true);
+
+            var result = await controller.UpdateUser(dto);
+
+            result.Should().BeOfType<NoContentResult>();
             _mockMapper.Verify(m => m.Map(dto, user), Times.Once);
             _mockUnitOfWork.Verify(u => u.Complete(), Times.Once);
         }
@@ -2477,6 +2569,34 @@ namespace DatingApp.Tests.Controllers
         }
 
         [Fact]
+        public async Task SetMainPhoto_SetsPhotoAsMain_WhenValid()
+        {
+            var controller = CreateControllerWithMockUser("alice");
+            var user = new AppUser
+            {
+                UserName = "alice",
+                    KnownAs = "Alice",
+                        Gender = "female",
+                        City = "Wonderland",
+                        Country = "Fantasy",
+                Photos = new List<Photo>
+                {
+                    new Photo { Id = 1, IsMain = true, Url = "http://example.com/photo.jpg" },
+                    new Photo { Id = 2, IsMain = false, Url = "http://example2.com/photo.jpg" }
+                }
+            };
+
+            _mockUnitOfWork.Setup(u => u.UserRepository.GetUserByUsernameAsync("alice")).ReturnsAsync(user);
+            _mockUnitOfWork.Setup(u => u.Complete()).ReturnsAsync(true);
+
+            var result = await controller.SetMainPhoto(2);
+
+            result.Should().BeOfType<NoContentResult>();
+            user.Photos.First(p => p.Id == 2).IsMain.Should().BeTrue();
+            user.Photos.First(p => p.Id == 1).IsMain.Should().BeFalse();
+        }
+
+        [Fact]
         public async Task SetMainPhoto_ReturnsBadRequest_WhenSaveFails()
         {
             // Arrange
@@ -2511,6 +2631,25 @@ namespace DatingApp.Tests.Controllers
             // Original main photo should remain unchanged
             user.Photos.Single(p => p.Id == 1).IsMain.Should().BeFalse();
             user.Photos.Single(p => p.Id == 2).IsMain.Should().BeTrue();
+        }
+        
+        [Fact]
+        public async Task GetUser_ReturnsMember_WhenExists()
+        {
+            // Arrange
+            var controller = CreateControllerWithMockUser("alice");
+            var member = new MemberDto { Username = "bob" };
+
+            _mockUnitOfWork
+                .Setup(u => u.UserRepository.GetMemberAsync("bob", false))
+                .ReturnsAsync(member);
+
+            // Act
+            var result = await controller.GetUser("bob");
+
+            // Assert
+            result.Value.Should().NotBeNull();
+            result.Value.Username.Should().Be("bob");
         }
     }
 }
