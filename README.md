@@ -14,9 +14,9 @@
 
 ![Language Usage Bar](./client/src/assets/language_bar_with_labels1.png)
 
-- 🟢 **C#** – 76.5%
-- 🔵 **TypeScript** – 14.5%
-- 🔴 **HTML** – 8.1%
+- 🟢 **C#** – 78.1%
+- 🔵 **TypeScript** – 13.5%
+- 🔴 **HTML** – 7.6%
 - 🟠 **CSS** – 0.8%
 - 🟡 **Dockerfile** – 0.1%
 ---
