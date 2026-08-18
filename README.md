@@ -24,6 +24,16 @@ The project demonstrates backend API development, authentication and authorizati
 - 🟡 **Dockerfile** – 0.1%
 ---
 
+## Technologies
+- Backend: C#, .NET 8, ASP.NET Core Web API
+- Database: PostgreSQL, Entity Framework Core
+- Frontend: Angular, TypeScript, HTML, CSS, Bootstrap
+- Authentication: JWT
+- Real-time: SignalR
+- Testing: xUnit
+- DevOps: Docker, GitHub Actions
+- Cloud: Render, Cloudinary
+- 
 ## 🧪 Here are some of the technologies used to develop the application:
 
 - Setting up the developer environment
@@ -38,6 +48,7 @@ The project demonstrates backend API development, authentication and authorizati
 - Paging, Sorting and Filtering
 - Adding a Private Messaging system to the app
 - Using SignalR for real time presence and live messaging between users
+- Testing - The project includes automated unit tests using **xUnit, Moq **and **FluentAssertions**, covering controller and repository functionality.
 - Many more things as well
 
 ## 🧩 Third parties and additional resourses used:
