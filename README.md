@@ -1,5 +1,5 @@
 <h1 align="center">Hi 👋, I'm Iliya Likomanov</h1> 
-<h3 align="center">I'm a Juniour Backend Engineer, from Bulgaria.</h3>
+<h3 align="center">I'm a C# / .NET Backend Developer with experience building reliable web APIs and business applications.</h3>
 
 <h3 align="left">Contact me: iliyalikomanov@gmail.com</h3>
 <h3 align="left">Check my application: https://datingapp-net8-z2rv.onrender.com</h3>
