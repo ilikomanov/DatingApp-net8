@@ -24,7 +24,7 @@ The project demonstrates backend API development, authentication and authorizati
 - 🟡 **Dockerfile** – 0.1%
 ---
 
-## Technologies
+## 🖥️ Technologies
 - Backend: C#, .NET 8, ASP.NET Core Web API
 - Database: PostgreSQL, Entity Framework Core
 - Frontend: Angular, TypeScript, HTML, CSS, Bootstrap
@@ -33,7 +33,7 @@ The project demonstrates backend API development, authentication and authorizati
 - Testing: xUnit
 - DevOps: Docker, GitHub Actions
 - Cloud: Render, Cloudinary
-- 
+  
 ## 🧪 Here are some of the technologies used to develop the application:
 
 - Setting up the developer environment
