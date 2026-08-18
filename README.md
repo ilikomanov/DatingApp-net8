@@ -3,6 +3,9 @@
 
 <h3 align="left">Contact me: iliyalikomanov@gmail.com</h3>
 <h3 align="left">Check my application: https://datingapp-net8-z2rv.onrender.com</h3>
+<p align="left">A full-stack dating application built with ASP.NET Core Web API, C#, Entity Framework Core, PostgreSQL and Angular.
+
+The project demonstrates backend API development, authentication and authorization, database design, real-time communication, image handling, pagination, filtering, messaging, and automated testing. </p>
 <p align="left">
 </p>
 
