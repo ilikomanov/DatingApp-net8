@@ -51,7 +51,7 @@ The project demonstrates backend API development, authentication and authorizati
 - Testing - The project includes automated unit tests using **xUnit, Moq **and **FluentAssertions**, covering controller and repository functionality.
 - Many more things as well
 
-## 🧩 Third parties and additional resourses used:
+## 🧩 Third parties and additional resources used:
 
 - https://v17.angular.io/guide/setup-local - Angular
 - https://github.com/FiloSottile/mkcert
